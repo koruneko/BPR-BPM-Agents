@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>経費精算業務（To-Be）</title>
+<style>
+:root { color-scheme: light dark; font-family: "Segoe UI", "Yu Gothic UI", sans-serif; font-size: 16px; }
+* { box-sizing: border-box; }
+body { margin: 0; background: Canvas; color: CanvasText; font-size: 16px; }
+button, input { font: inherit; }
+header { padding: 22px 28px 16px; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); }
+h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.25; }
+header p { margin: 0; opacity: .78; font-size: 17px; line-height: 1.55; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; height: calc(100vh - 106px); min-height: 680px; }
+main.details-hidden { grid-template-columns: minmax(0, 1fr); }
+main.details-hidden aside { display: none; }
+.viewer { overflow: auto; padding: 0 22px 22px; background: color-mix(in srgb, Canvas 94%, CanvasText 6%); }
+.viewer-toolbar { position: sticky; top: 0; left: 0; z-index: 20; display: flex; align-items: center; gap: 8px; width: max-content; min-height: 58px; padding: 10px 12px; margin: 0 0 12px; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-top: 0; border-radius: 0 0 10px 10px; background: color-mix(in srgb, Canvas 94%, transparent); backdrop-filter: blur(8px); box-shadow: 0 2px 8px color-mix(in srgb, CanvasText 10%, transparent); }
+.toolbar-button { min-width: 42px; min-height: 38px; padding: 6px 11px; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; background: color-mix(in srgb, Canvas 92%, CanvasText 8%); color: CanvasText; cursor: pointer; }
+.toolbar-button:hover, .toolbar-button:focus-visible { border-color: color-mix(in srgb, CanvasText 48%, transparent); outline: none; }
+.zoom-range { width: 190px; min-width: 120px; }
+.zoom-value { min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.toolbar-separator { width: 1px; height: 30px; background: color-mix(in srgb, CanvasText 18%, transparent); margin: 0 2px; }
+.canvas { width: max-content; min-width: 100%; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-radius: 12px; overflow: visible; background: Canvas; }
+#process-svg { display: block; width: 4330px; height: 1386px; max-width: none; transform-origin: top left; }
+aside { border-left: 1px solid color-mix(in srgb, CanvasText 16%, transparent); padding: 24px; overflow: auto; font-size: 16px; line-height: 1.55; }
+aside h2 { margin-top: 0; font-size: 22px; line-height: 1.35; }
+.detail-row { margin: 0 0 18px; }
+.detail-row dt { font-weight: 700; font-size: 14px; opacity: .72; margin-bottom: 5px; }
+.detail-row dd { margin: 0; white-space: pre-wrap; font-size: 17px; }
+.lane-bg { stroke: color-mix(in srgb, CanvasText 18%, transparent); stroke-width: 1.3; }
+.lane-0 { fill: color-mix(in srgb, Canvas 97%, CanvasText 3%); }
+.lane-1 { fill: color-mix(in srgb, Canvas 93%, CanvasText 7%); }
+.lane-label { font-size: 18px; font-weight: 700; fill: CanvasText; }
+.flow-edge { fill: none; stroke: color-mix(in srgb, CanvasText 68%, transparent); stroke-width: 2.1; }
+.arrow-head { fill: color-mix(in srgb, CanvasText 68%, transparent); }
+.edge-label { font-size: 15px; font-weight: 650; fill: CanvasText; paint-order: stroke; stroke: Canvas; stroke-width: 5px; stroke-linejoin: round; }
+.jump-full-route { display: none; }
+#process-svg.show-full-returns .jump-full-route { display: block; }
+#process-svg.show-full-returns .jump-compact { display: none; }
+ .jump-stub, .jump-target-stub { fill: none; stroke: color-mix(in srgb, CanvasText 72%, transparent); stroke-width: 2.4; stroke-dasharray: 7 5; }
+.jump-target-stub { stroke-dasharray: none; }
+ .jump-badge { fill: Canvas; stroke: color-mix(in srgb, CanvasText 78%, transparent); stroke-width: 2.2; }
+ .jump-target { stroke-width: 3; }
+ .jump-badge-text { fill: CanvasText; font-size: 16px; font-weight: 800; pointer-events: none; }
+.jump-legend { width: min(760px, calc(100vw - 90px)); margin: 0 0 12px; padding: 9px 12px; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-radius: 9px; background: color-mix(in srgb, Canvas 96%, CanvasText 4%); font-size: 14px; line-height: 1.5; }
+.jump-legend summary { cursor: pointer; font-weight: 700; }
+.jump-legend p { margin: 7px 0; opacity: .78; }
+.task { fill: color-mix(in srgb, Canvas 86%, #4f7cff 14%); stroke: color-mix(in srgb, CanvasText 56%, transparent); stroke-width: 1.8; }
+.gateway { fill: color-mix(in srgb, Canvas 86%, #f5a623 14%); stroke: color-mix(in srgb, CanvasText 62%, transparent); stroke-width: 1.8; }
+.gateway-symbol { fill: CanvasText; font-size: 34px; font-weight: 500; }
+.gateway-caption { fill: CanvasText; font-size: 14px; font-weight: 650; }
+.event-start, .event-end, .event-end-inner { fill: Canvas; stroke: CanvasText; }
+.event-start { stroke-width: 2; }
+.event-end { stroke-width: 1.8; }
+.event-end-inner { fill: none; stroke-width: 1.8; }
+.node-label { fill: CanvasText; font-size: 18px; font-weight: 650; pointer-events: none; }
+.event-label { fill: CanvasText; font-size: 12px; font-weight: 650; pointer-events: none; }
+.process-node { cursor: pointer; outline: none; }
+.process-node:hover .task, .process-node:focus .task { stroke-width: 3.5; }
+.process-node:hover .gateway, .process-node:focus .gateway { stroke-width: 3.5; }
+.process-node.selected .task, .process-node.selected .gateway { stroke: #4f7cff; stroke-width: 3.5; }
+.badge { display:inline-block; padding:3px 9px; border-radius:999px; background:color-mix(in srgb, CanvasText 10%, transparent); margin:0 5px 5px 0; font-size:14px; }
+.issue-list { margin: 0; padding-left: 1.35em; }
+.issue-list li { margin: 0 0 7px; line-height: 1.55; }
+.issue-list li:last-child { margin-bottom: 0; }
+.bpr-list { margin: 0; padding: 0; list-style: none; }
+.bpr-item { margin: 0 0 12px; padding: 10px 11px; border: 1px solid color-mix(in srgb, CanvasText 14%, transparent); border-radius: 9px; background: color-mix(in srgb, CanvasText 4%, transparent); }
+.bpr-item:last-child { margin-bottom: 0; }
+.bpr-head { display:flex; gap:7px; align-items:center; flex-wrap:wrap; margin-bottom:5px; }
+.bpr-id { display:inline-block; padding:2px 7px; border-radius:999px; font-size:13px; font-weight:700; background:color-mix(in srgb,#4f7cff 16%,transparent); }
+.bpr-effect { margin-top:5px; }
+.empty { opacity:.64; }
+.muted { opacity:.7; }
+@media (max-width: 1100px) {
+  main { grid-template-columns: 1fr; height:auto; }
+  main:not(.details-hidden) aside { border-left:0; border-top:1px solid color-mix(in srgb, CanvasText 16%, transparent); min-height:320px; }
+  .zoom-range { width: 130px; }
+}
+</style>
+</head>
+<body>
+<header><h1>経費精算業務（To-Be）</h1><p>申請時検証、承認ルーティング、会計連携、エビデンス保管、並行完了統制を反映した経費精算業務</p></header>
+<main id="main-layout">
+<section class="viewer" id="viewer">
+  <div class="viewer-toolbar" id="viewer-toolbar" role="toolbar" aria-label="業務フロー表示設定">
+    <button class="toolbar-button" id="zoom-out" type="button" title="10%縮小" aria-label="10%縮小">−</button>
+    <input class="zoom-range" id="zoom-range" type="range" min="5" max="200" step="5" value="100" aria-label="表示倍率">
+    <button class="toolbar-button" id="zoom-in" type="button" title="10%拡大" aria-label="10%拡大">＋</button>
+    <span class="zoom-value" id="zoom-value" aria-live="polite">100%</span>
+    <button class="toolbar-button" id="zoom-reset" type="button">100%</button>
+    <button class="toolbar-button" id="zoom-fit-width" type="button">幅に合わせる</button>
+    <button class="toolbar-button" id="zoom-fit" type="button">全体表示</button>
+    <span class="toolbar-separator" aria-hidden="true"></span>
+    <button class="toolbar-button" id="toggle-details" type="button" aria-pressed="false">詳細を隠す</button>
+    <span class="toolbar-separator" aria-hidden="true"></span><button class="toolbar-button" id="toggle-return-routes" type="button" aria-pressed="false">戻り線を表示</button>
+  </div>
+  <details class="jump-legend"><summary>↩ 長距離の戻り線 5件をジャンプ表示</summary><p>図の混雑を避けるため、長い戻り線だけ Rn の対応記号で省略しています。YAML/BPMN上の接続は変更していません。「戻り線を表示」で完全な線へ切り替えられます。</p><div><b>R1</b>: 内容を修正して再申請 → 申請内容とエビデンスを確認</div><div><b>R2</b>: 社員へ差し戻し → 内容を修正して再申請</div><div><b>R3</b>: 会計連携の例外を是正 → 会計システムへ経費情報を連携</div><div><b>R4</b>: エビデンス保管の例外を是正 → エビデンスを自動保管</div><div><b>R5</b>: 振込失敗を是正 → 振込を実行して結果を記録</div></details>
+  <div class="canvas"><svg id="process-svg" width="4330" height="1386" viewBox="0 0 4330 1386" role="img" aria-label="業務プロセス図">
+<defs><marker id="arrow" markerWidth="11" markerHeight="11" refX="10" refY="3.5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,7 L10,3.5 z" class="arrow-head"/></marker><marker id="jump-arrow" markerWidth="12" markerHeight="12" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L0,8 L11,4 z" class="arrow-head"/></marker></defs>
+<rect class="lane-bg lane-0" x="40" y="60" width="4250" height="190" rx="5"/>
+<text class="lane-label" x="62" y="94">社員</text>
+<rect class="lane-bg lane-1" x="40" y="250" width="4250" height="214" rx="5"/>
+<text class="lane-label" x="62" y="284">直属の上長</text>
+<rect class="lane-bg lane-0" x="40" y="464" width="4250" height="376" rx="5"/>
+<text class="lane-label" x="62" y="498">自動処理</text>
+<rect class="lane-bg lane-1" x="40" y="840" width="4250" height="214" rx="5"/>
+<text class="lane-label" x="62" y="874">部門長</text>
+<rect class="lane-bg lane-0" x="40" y="1054" width="4250" height="292" rx="5"/>
+<text class="lane-label" x="62" y="1088">経理担当者</text>
+<path class="flow-edge" d="M 272.0 155.0 L 530.0 155.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 760.0 155.0 L 800.0 155.0 L 800.0 357.0 L 840.0 357.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1070.0 357.0 L 1150.0 357.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1222.0 357.0 L 1341.0 357.0 L 1460.0 357.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="1400.5" y="347.0" text-anchor="middle">不備あり</text>
+<path class="flow-edge" d="M 1222.0 357.0 L 1341.0 357.0 L 1341.0 652.0 L 1460.0 652.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="1400.5" y="642.0" text-anchor="middle">不備なし</text>
+<path class="flow-edge" d="M 1690.0 357.0 L 1730.0 357.0 L 1730.0 155.0 L 1770.0 155.0" marker-end="url(#arrow)"/>
+<path class="flow-edge jump-full-route" d="M 2000.0 155.0 L 2042.0 155.0 L 2042.0 20.0 L 798.0 20.0 L 798.0 357.0 L 840.0 357.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1532.0 652.0 L 1651.0 652.0 L 1651.0 947.0 L 1770.0 947.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="1710.5" y="937.0" text-anchor="middle">5万円以上</text>
+<path class="flow-edge" d="M 1532.0 652.0 L 1651.0 652.0 L 1651.0 1200.0 L 1770.0 1200.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="1710.5" y="1190.0" text-anchor="middle">5万円未満</text>
+<path class="flow-edge" d="M 2000.0 947.0 L 2080.0 947.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2152.0 947.0 L 2194.0 947.0 L 2194.0 1278.0 L 1728.0 1278.0 L 1728.0 1200.0 L 1770.0 1200.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="1961.0" y="1268.0" text-anchor="middle">承認</text>
+<path class="flow-edge" d="M 2152.0 947.0 L 2390.0 947.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2271.0" y="937.0" text-anchor="middle">差し戻し</text>
+<path class="flow-edge jump-full-route" d="M 2620.0 947.0 L 2662.0 947.0 L 2662.0 20.0 L 1728.0 20.0 L 1728.0 155.0 L 1770.0 155.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1842.0 1200.0 L 2044.0 1200.0 L 2044.0 652.0 L 2080.0 652.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2152.0 652.0 L 2271.0 652.0 L 2271.0 592.0 L 2390.0 592.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2152.0 652.0 L 2271.0 652.0 L 2271.0 712.0 L 2390.0 712.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2620.0 592.0 L 2700.0 592.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2772.0 592.0 L 2891.0 592.0 L 2891.0 652.0 L 3010.0 652.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2950.5" y="642.0" text-anchor="middle">成功</text>
+<path class="flow-edge" d="M 2772.0 592.0 L 2891.0 592.0 L 2891.0 1140.0 L 3010.0 1140.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2908.5" y="1130.0" text-anchor="middle">失敗・期限超過</text>
+<path class="flow-edge jump-full-route" d="M 3240.0 1140.0 L 3282.0 1140.0 L 3282.0 308.0 L 2348.0 308.0 L 2348.0 592.0 L 2390.0 592.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2620.0 712.0 L 2700.0 712.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2772.0 712.0 L 2891.0 712.0 L 2891.0 652.0 L 3010.0 652.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2950.5" y="680.0" text-anchor="middle">成功</text>
+<path class="flow-edge" d="M 2772.0 712.0 L 2891.0 712.0 L 2891.0 1260.0 L 3010.0 1260.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2908.5" y="1250.0" text-anchor="middle">失敗・期限超過</text>
+<path class="flow-edge jump-full-route" d="M 3240.0 1260.0 L 3282.0 1260.0 L 3282.0 1348.0 L 2348.0 1348.0 L 2348.0 712.0 L 2390.0 712.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 3082.0 652.0 L 3284.0 652.0 L 3284.0 1200.0 L 3320.0 1200.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 3550.0 1200.0 L 3630.0 1200.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 3702.0 1200.0 L 3821.0 1200.0 L 3940.0 1200.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="3880.5" y="1190.0" text-anchor="middle">成功</text>
+<path class="flow-edge" d="M 3702.0 1200.0 L 3821.0 1200.0 L 3821.0 1118.0 L 3940.0 1118.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="3880.5" y="1108.0" text-anchor="middle">失敗</text>
+<path class="flow-edge jump-full-route" d="M 4170.0 1118.0 L 4212.0 1118.0 L 4212.0 1288.0 L 3278.0 1288.0 L 3278.0 1200.0 L 3320.0 1200.0" marker-end="url(#arrow)"/>
+<g class="process-node" data-node-id="start" tabindex="0" role="button">
+<circle class="event-start" cx="246.0" cy="155.0" r="23.0"/>
+<text class="event-label" x="246.0" y="160.0" text-anchor="middle"><tspan x="246.0" dy="0">経費申請を開始</tspan></text>
+</g>
+<g class="process-node" data-node-id="submit_expense" tabindex="0" role="button">
+<rect class="task" x="530" y="109.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="645.0" y="150.0" text-anchor="middle"><tspan x="645.0" dy="0">申請内容とエビデンスを登録</tspan><tspan x="645.0" dy="22">して申請</tspan></text>
+</g>
+<g class="process-node" data-node-id="manager_review" tabindex="0" role="button">
+<rect class="task" x="840" y="311.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="955.0" y="363.0" text-anchor="middle"><tspan x="955.0" dy="0">申請内容とエビデンスを確認</tspan></text>
+</g>
+<g class="process-node" data-node-id="defect_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="1186.0,321.0 1222,357.0 1186.0,393.0 1150,357.0"/>
+<text class="gateway-symbol" x="1186.0" y="365.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="1186.0" y="419.0" text-anchor="middle"><tspan x="1186.0" dy="0">内容に不備があるか</tspan></text>
+</g>
+<g class="process-node" data-node-id="manager_return" tabindex="0" role="button">
+<rect class="task" x="1460" y="311.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="1575.0" y="363.0" text-anchor="middle"><tspan x="1575.0" dy="0">社員へ差し戻し</tspan></text>
+</g>
+<g class="process-node" data-node-id="revise_resubmit" tabindex="0" role="button">
+<rect class="task" x="1770" y="109.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="1885.0" y="161.0" text-anchor="middle"><tspan x="1885.0" dy="0">内容を修正して再申請</tspan></text>
+</g>
+<g class="process-node" data-node-id="amount_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="1496.0,616.0 1532,652.0 1496.0,688.0 1460,652.0"/>
+<text class="gateway-symbol" x="1496.0" y="660.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="1496.0" y="703.0" text-anchor="middle"><tspan x="1496.0" dy="0">精算予定総額が5万円以</tspan><tspan x="1496.0" dy="22">上か</tspan></text>
+</g>
+<g class="process-node" data-node-id="department_head_review" tabindex="0" role="button">
+<rect class="task" x="1770" y="901.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="1885.0" y="953.0" text-anchor="middle"><tspan x="1885.0" dy="0">申請を審査</tspan></text>
+</g>
+<g class="process-node" data-node-id="approval_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="2116.0,911.0 2152,947.0 2116.0,983.0 2080,947.0"/>
+<text class="gateway-symbol" x="2116.0" y="955.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="2116.0" y="1009.0" text-anchor="middle"><tspan x="2116.0" dy="0">部門長の審査結果</tspan></text>
+</g>
+<g class="process-node" data-node-id="department_head_return" tabindex="0" role="button">
+<rect class="task" x="2390" y="901.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="2505.0" y="953.0" text-anchor="middle"><tspan x="2505.0" dy="0">社員へ差し戻し</tspan></text>
+</g>
+<g class="process-node" data-node-id="approval_merge" tabindex="0" role="button">
+<polygon class="gateway" points="1806.0,1164.0 1842,1200.0 1806.0,1236.0 1770,1200.0"/>
+<text class="gateway-symbol" x="1806.0" y="1208.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="1806.0" y="1262.0" text-anchor="middle"><tspan x="1806.0" dy="0">必要な承認を完了</tspan></text>
+</g>
+<g class="process-node" data-node-id="parallel_split" tabindex="0" role="button">
+<polygon class="gateway" points="2116.0,616.0 2152,652.0 2116.0,688.0 2080,652.0"/>
+<text class="gateway-symbol" x="2116.0" y="660.0" text-anchor="middle">+</text>
+<text class="gateway-caption" x="2116.0" y="714.0" text-anchor="middle"><tspan x="2116.0" dy="0">経理処理を並行開始</tspan></text>
+</g>
+<g class="process-node" data-node-id="register_accounting" tabindex="0" role="button">
+<rect class="task" x="2390" y="546.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="2505.0" y="587.0" text-anchor="middle"><tspan x="2505.0" dy="0">会計システムへ経費情報を連</tspan><tspan x="2505.0" dy="22">携</tspan></text>
+</g>
+<g class="process-node" data-node-id="registration_error_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="2736.0,556.0 2772,592.0 2736.0,628.0 2700,592.0"/>
+<text class="gateway-symbol" x="2736.0" y="600.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="2736.0" y="654.0" text-anchor="middle"><tspan x="2736.0" dy="0">会計連携が成功したか</tspan></text>
+</g>
+<g class="process-node" data-node-id="correct_registration" tabindex="0" role="button">
+<rect class="task" x="3010" y="1094.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="3125.0" y="1146.0" text-anchor="middle"><tspan x="3125.0" dy="0">会計連携の例外を是正</tspan></text>
+</g>
+<g class="process-node" data-node-id="store_evidence" tabindex="0" role="button">
+<rect class="task" x="2390" y="666.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="2505.0" y="718.0" text-anchor="middle"><tspan x="2505.0" dy="0">エビデンスを自動保管</tspan></text>
+</g>
+<g class="process-node" data-node-id="evidence_result_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="2736.0,676.0 2772,712.0 2736.0,748.0 2700,712.0"/>
+<text class="gateway-symbol" x="2736.0" y="720.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="2736.0" y="763.0" text-anchor="middle"><tspan x="2736.0" dy="0">エビデンス保管が成功し</tspan><tspan x="2736.0" dy="22">たか</tspan></text>
+</g>
+<g class="process-node" data-node-id="correct_evidence_storage" tabindex="0" role="button">
+<rect class="task" x="3010" y="1214.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="3125.0" y="1266.0" text-anchor="middle"><tspan x="3125.0" dy="0">エビデンス保管の例外を是正</tspan></text>
+</g>
+<g class="process-node" data-node-id="parallel_join" tabindex="0" role="button">
+<polygon class="gateway" points="3046.0,616.0 3082,652.0 3046.0,688.0 3010,652.0"/>
+<text class="gateway-symbol" x="3046.0" y="660.0" text-anchor="middle">+</text>
+<text class="gateway-caption" x="3046.0" y="703.0" text-anchor="middle"><tspan x="3046.0" dy="0">登録と保管の完了を待ち</tspan><tspan x="3046.0" dy="22">合わせ</tspan></text>
+</g>
+<g class="process-node" data-node-id="bank_transfer" tabindex="0" role="button">
+<rect class="task" x="3320" y="1154.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="3435.0" y="1206.0" text-anchor="middle"><tspan x="3435.0" dy="0">振込を実行して結果を記録</tspan></text>
+</g>
+<g class="process-node" data-node-id="transfer_result_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="3666.0,1164.0 3702,1200.0 3666.0,1236.0 3630,1200.0"/>
+<text class="gateway-symbol" x="3666.0" y="1208.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="3666.0" y="1262.0" text-anchor="middle"><tspan x="3666.0" dy="0">振込が成功したか</tspan></text>
+</g>
+<g class="process-node" data-node-id="resolve_transfer_failure" tabindex="0" role="button">
+<rect class="task" x="3940" y="1072" width="230" height="92" rx="12"/>
+<text class="node-label" x="4055.0" y="1124.0" text-anchor="middle"><tspan x="4055.0" dy="0">振込失敗を是正</tspan></text>
+</g>
+<g class="process-node" data-node-id="end" tabindex="0" role="button">
+<circle class="event-end" cx="3966.0" cy="1200.0" r="23.0"/>
+<circle class="event-end-inner" cx="3966.0" cy="1200.0" r="17.0"/>
+<text class="event-label" x="3966.0" y="1248.0" text-anchor="middle"><tspan x="3966.0" dy="0">経費精算を完了</tspan></text>
+</g>
+<g class="jump-compact jump-source-connector"><title>R1: 内容を修正して再申請 → 申請内容とエビデンスを確認</title>
+<path class="jump-stub" d="M 2000.0 155.0 L 2034.0 155.0"/>
+<rect class="jump-badge jump-source" x="2034.0" y="136.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="2070.0" y="160.0" text-anchor="middle">R1</text></g>
+<g class="jump-compact jump-target-connector"><title>R1: 内容を修正して再申請 から戻る</title>
+<rect class="jump-badge jump-target" x="998.0" y="245.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="1034.0" y="269.0" text-anchor="middle">R1</text>
+<path class="jump-target-stub" d="M 1034.0 283.0 L 1034.0 311.0" marker-end="url(#jump-arrow)"/></g>
+<g class="jump-compact jump-source-connector"><title>R2: 社員へ差し戻し → 内容を修正して再申請</title>
+<path class="jump-stub" d="M 2620.0 947.0 L 2654.0 947.0"/>
+<rect class="jump-badge jump-source" x="2654.0" y="928.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="2690.0" y="952.0" text-anchor="middle">R2</text></g>
+<g class="jump-compact jump-target-connector"><title>R2: 社員へ差し戻し から戻る</title>
+<rect class="jump-badge jump-target" x="1928.0" y="43.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="1964.0" y="67.0" text-anchor="middle">R2</text>
+<path class="jump-target-stub" d="M 1964.0 81.0 L 1964.0 109.0" marker-end="url(#jump-arrow)"/></g>
+<g class="jump-compact jump-source-connector"><title>R3: 会計連携の例外を是正 → 会計システムへ経費情報を連携</title>
+<path class="jump-stub" d="M 3125.0 1094.0 L 3125.0 1066.0"/>
+<rect class="jump-badge jump-source" x="3089.0" y="1028.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="3125.0" y="1052.0" text-anchor="middle">R3</text></g>
+<g class="jump-compact jump-target-connector"><title>R3: 会計連携の例外を是正 から戻る</title>
+<rect class="jump-badge jump-target" x="2548.0" y="480.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="2584.0" y="504.0" text-anchor="middle">R3</text>
+<path class="jump-target-stub" d="M 2584.0 518.0 L 2584.0 546.0" marker-end="url(#jump-arrow)"/></g>
+<g class="jump-compact jump-source-connector"><title>R4: エビデンス保管の例外を是正 → エビデンスを自動保管</title>
+<path class="jump-stub" d="M 3125.0 1306.0 L 3125.0 1334.0"/>
+<rect class="jump-badge jump-source" x="3089.0" y="1334.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="3125.0" y="1358.0" text-anchor="middle">R4</text></g>
+<g class="jump-compact jump-target-connector"><title>R4: エビデンス保管の例外を是正 から戻る</title>
+<rect class="jump-badge jump-target" x="2548.0" y="786.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="2584.0" y="810.0" text-anchor="middle">R4</text>
+<path class="jump-target-stub" d="M 2584.0 786.0 L 2584.0 758.0" marker-end="url(#jump-arrow)"/></g>
+<g class="jump-compact jump-source-connector"><title>R5: 振込失敗を是正 → 振込を実行して結果を記録</title>
+<path class="jump-stub" d="M 4170.0 1118.0 L 4204.0 1118.0"/>
+<rect class="jump-badge jump-source" x="4204.0" y="1099.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="4240.0" y="1123.0" text-anchor="middle">R5</text></g>
+<g class="jump-compact jump-target-connector"><title>R5: 振込失敗を是正 から戻る</title>
+<rect class="jump-badge jump-target" x="3478.0" y="1088.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="3514.0" y="1112.0" text-anchor="middle">R5</text>
+<path class="jump-target-stub" d="M 3514.0 1126.0 L 3514.0 1154.0" marker-end="url(#jump-arrow)"/></g>
+</svg></div>
+</section>
+<aside id="details">
+<h2>プロセス概要</h2>
+<dl>
+<div class="detail-row"><dt>プロセスID</dt><dd>expense_reimbursement_to_be</dd></div>
+<div class="detail-row"><dt>オーナー</dt><dd>未設定</dd></div>
+</dl>
+<p class="empty">図の処理・判断を選択すると詳細を表示します。</p>
+<noscript><p>JavaScriptが無効でも業務フロー図は表示できます。表示倍率、詳細パネル切り替え、詳細表示のみ利用できません。</p></noscript>
+</aside>
+</main>
+<script type="application/json" id="process-data">{"schema_version": "1.0", "process": {"id": "expense_reimbursement_to_be", "name": "経費精算業務（To-Be）", "description": "申請時検証、承認ルーティング、会計連携、エビデンス保管、並行完了統制を反映した経費精算業務", "version": "2.0", "scope": {"start": "社員が経費申請を開始する", "end": "経理担当者が振込処理を完了する"}}, "participants": [{"id": "employee", "name": "社員", "type": "role"}, {"id": "manager", "name": "直属の上長", "type": "role"}, {"id": "department_head", "name": "部門長", "type": "role"}, {"id": "accounting", "name": "経理担当者", "type": "role"}, {"id": "automation_system", "name": "自動処理", "type": "system"}], "nodes": [{"id": "start", "type": "start", "name": "経費申請を開始", "participant": "employee"}, {"id": "submit_expense", "type": "task", "task_type": "user", "name": "申請内容とエビデンスを登録して申請", "participant": "employee", "description": "社員が申請内容とエビデンスを登録する。共通の必須項目、形式、エビデンス要件を送信前に検証し、不備がなければ申請する。", "system": "Power Apps 経費精算アプリ", "inputs": ["経費情報", "エビデンス"], "outputs": ["経費申請", "エビデンス"], "automation": {"candidate": true, "notes": "入力形式、必須項目、エビデンス有無をシステムが検証し、業務妥当性は人が判断する。"}}, {"id": "manager_review", "type": "task", "task_type": "generic", "name": "申請内容とエビデンスを確認", "participant": "manager", "description": "直属の上長が申請内容とエビデンスを審査し、判断結果、日時、コメントを一元管理する。", "inputs": ["経費申請", "エビデンス"], "outputs": ["経費申請"]}, {"id": "defect_gateway", "type": "gateway_exclusive", "name": "内容に不備があるか", "participant": "manager"}, {"id": "manager_return", "type": "task", "task_type": "generic", "name": "社員へ差し戻し", "participant": "manager", "description": "直属の上長が共通の差し戻し分類、具体的指摘、修正対象、再確認対象を記録して社員へ差し戻す。", "inputs": ["経費申請"], "outputs": ["経費申請", "差し戻し指摘"]}, {"id": "revise_resubmit", "type": "task", "task_type": "user", "name": "内容を修正して再申請", "participant": "employee", "description": "社員が標準化された差し戻し理由、具体的指摘、修正対象に基づいて内容またはエビデンスを修正し、送信前検証後に再申請する。", "system": "Power Apps 経費精算アプリ", "inputs": ["経費申請", "エビデンス", "差し戻し指摘"], "outputs": ["経費申請", "エビデンス"]}, {"id": "amount_gateway", "type": "gateway_exclusive", "name": "精算予定総額が5万円以上か", "participant": "automation_system"}, {"id": "department_head_review", "type": "task", "task_type": "generic", "name": "申請を審査", "participant": "department_head", "description": "部門長が5万円以上の経費申請を審査し、判断結果、日時、コメントを一元管理する。", "inputs": ["経費申請", "エビデンス"], "outputs": ["経費申請"]}, {"id": "approval_gateway", "type": "gateway_exclusive", "name": "部門長の審査結果", "participant": "department_head"}, {"id": "department_head_return", "type": "task", "task_type": "generic", "name": "社員へ差し戻し", "participant": "department_head", "description": "部門長が共通の差し戻し分類、具体的指摘、修正対象、再確認対象を記録して社員へ差し戻す。", "inputs": ["経費申請"], "outputs": ["経費申請", "差し戻し指摘"]}, {"id": "approval_merge", "type": "gateway_exclusive", "name": "必要な承認を完了", "participant": "accounting"}, {"id": "parallel_split", "type": "gateway_parallel", "name": "経理処理を並行開始", "participant": "automation_system"}, {"id": "register_accounting", "type": "task", "task_type": "service", "name": "会計システムへ経費情報を連携", "participant": "automation_system", "description": "必要承認後の経費申請を標準マッピングで会計システムへ自動連携し、成功・失敗・失敗理由を申請単位で記録する。", "system": "会計システム", "inputs": ["経費申請"], "outputs": ["経費申請", "会計登録結果"], "automation": {"candidate": true, "notes": "正常系の会計登録を自動実行し、失敗・期限超過時だけ経理担当者が対応する。", "exception_owner": "accounting"}}, {"id": "registration_error_gateway", "type": "gateway_exclusive", "name": "会計連携が成功したか", "participant": "automation_system"}, {"id": "correct_registration", "type": "task", "task_type": "user", "name": "会計連携の例外を是正", "participant": "accounting", "description": "経理担当者が会計連携の失敗理由または期限超過を確認し、原因を是正して再実行する。", "system": "会計システム", "inputs": ["経費申請", "会計登録結果"], "outputs": ["経費申請"]}, {"id": "store_evidence", "type": "task", "task_type": "service", "name": "エビデンスを自動保管", "participant": "automation_system", "description": "必要承認後にエビデンスを所定の保管先へ自動保存し、申請ID、保存先、保存結果、版を記録する。", "inputs": ["経費申請", "エビデンス"], "outputs": ["エビデンス", "エビデンス保管結果"], "system": "所定のエビデンス保管先", "automation": {"candidate": true, "notes": "正常系の保管を自動実行し、失敗・期限超過時だけ経理担当者が対応する。", "exception_owner": "accounting"}}, {"id": "evidence_result_gateway", "type": "gateway_exclusive", "name": "エビデンス保管が成功したか", "participant": "automation_system"}, {"id": "correct_evidence_storage", "type": "task", "task_type": "user", "name": "エビデンス保管の例外を是正", "participant": "accounting", "description": "経理担当者がエビデンス保管の失敗理由または期限超過を確認し、原因を是正して再実行する。", "system": "所定のエビデンス保管先", "inputs": ["経費申請", "エビデンス", "エビデンス保管結果"], "outputs": ["経費申請", "エビデンス"]}, {"id": "parallel_join", "type": "gateway_parallel", "name": "登録と保管の完了を待ち合わせ", "participant": "automation_system"}, {"id": "bank_transfer", "type": "task", "task_type": "generic", "name": "振込を実行して結果を記録", "participant": "accounting", "description": "振込対象、金額、口座参照、支払日、申請IDを使用して振込を実行し、受付番号、実行日時、成否、失敗理由を記録する。", "inputs": ["経費申請", "会計登録結果", "エビデンス保管結果"], "outputs": ["経費申請", "振込結果"]}, {"id": "transfer_result_gateway", "type": "gateway_exclusive", "name": "振込が成功したか", "participant": "accounting"}, {"id": "resolve_transfer_failure", "type": "task", "task_type": "generic", "name": "振込失敗を是正", "participant": "accounting", "description": "経理担当者が振込失敗理由を確認し、定められた再実行、取消、照合ルールに従って原因を是正する。", "inputs": ["経費申請", "振込結果"], "outputs": ["経費申請"]}, {"id": "end", "type": "end", "name": "経費精算を完了", "participant": "accounting"}], "edges": [{"id": "e01", "from": "start", "to": "submit_expense"}, {"id": "e02", "from": "submit_expense", "to": "manager_review"}, {"id": "e03", "from": "manager_review", "to": "defect_gateway"}, {"id": "e04", "from": "defect_gateway", "to": "manager_return", "name": "不備あり", "condition": "申請内容またはエビデンスに不備がある"}, {"id": "e05", "from": "defect_gateway", "to": "amount_gateway", "name": "不備なし", "default": true}, {"id": "e06", "from": "manager_return", "to": "revise_resubmit"}, {"id": "e07", "from": "revise_resubmit", "to": "manager_review"}, {"id": "e09", "from": "amount_gateway", "to": "department_head_review", "name": "5万円以上", "condition": "申請単位の精算予定総額（税込・日本円換算後）が50000円以上"}, {"id": "e10", "from": "amount_gateway", "to": "approval_merge", "name": "5万円未満", "default": true}, {"id": "e11", "from": "department_head_review", "to": "approval_gateway"}, {"id": "e12", "from": "approval_gateway", "to": "approval_merge", "name": "承認", "condition": "部門長が承認"}, {"id": "e13", "from": "approval_gateway", "to": "department_head_return", "name": "差し戻し", "default": true}, {"id": "e14", "from": "department_head_return", "to": "revise_resubmit"}, {"id": "e15", "from": "approval_merge", "to": "parallel_split"}, {"id": "e16", "from": "parallel_split", "to": "register_accounting"}, {"id": "e17", "from": "parallel_split", "to": "store_evidence"}, {"id": "e18", "from": "register_accounting", "to": "registration_error_gateway"}, {"id": "e19", "from": "registration_error_gateway", "to": "parallel_join", "name": "成功", "condition": "会計連携が成功"}, {"id": "e20", "from": "registration_error_gateway", "to": "correct_registration", "name": "失敗・期限超過", "default": true}, {"id": "e21", "from": "correct_registration", "to": "register_accounting"}, {"id": "e22", "from": "store_evidence", "to": "evidence_result_gateway"}, {"id": "e25", "from": "evidence_result_gateway", "to": "parallel_join", "name": "成功", "condition": "エビデンス保管が成功"}, {"id": "e26", "from": "evidence_result_gateway", "to": "correct_evidence_storage", "name": "失敗・期限超過", "default": true}, {"id": "e27", "from": "correct_evidence_storage", "to": "store_evidence"}, {"id": "e23", "from": "parallel_join", "to": "bank_transfer"}, {"id": "e28", "from": "bank_transfer", "to": "transfer_result_gateway"}, {"id": "e29", "from": "transfer_result_gateway", "to": "end", "name": "成功", "condition": "振込が成功"}, {"id": "e30", "from": "transfer_result_gateway", "to": "resolve_transfer_failure", "name": "失敗", "default": true}, {"id": "e31", "from": "resolve_transfer_failure", "to": "bank_transfer"}], "metadata": {"assumptions": ["5万円以上の判定は、申請単位の精算予定総額（税込・日本円換算後）を使用する。", "会計連携とエビデンス保管は、両方が成功してから振込へ進む。"], "open_questions": ["現行の差し戻し理由別件数と差し戻し率はどの程度か", "Power Appsアプリで実装可能な入力検証方式と改修権限は何か", "再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か", "部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか", "閾値変更の承認者と変更履歴の保管要件は何か", "SLAと期限超過時の通知・エスカレーション経路は何か", "代理承認、承認取消、再割当の許容ルールは何か", "Power Automate承認機能に必要なライセンスと環境権限を満たすか", "会計システムが提供するAPIまたは入出力ファイル仕様は何か", "連携失敗時の再実行上限と経理担当者への通知方法は何か", "自動登録後の取消・訂正処理はどの経路で行うか", "所定の保管先と法令・監査上の保持要件は何か", "元ファイル、変換後ファイル、版のどれを保持対象とするか", "保存失敗時の再実行と手動是正の責任者は誰か", "並行処理の期限超過判定に用いるSLAは何か", "会計登録失敗と保管失敗の例外責任者は同一か", "片側が長期停止した場合の申請取消または手動振込の許可ルールは何か", "振込処理で利用するシステムまたは銀行チャネルは何か", "振込失敗時の再実行、取消、照合、承認ルールは何か", "振込結果と会計登録結果の照合責任者は誰か", "改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。", "規程、監査、保持、権限分離の要件が未確認である。"], "inferences": ["特定製品は選定されていないため、自動処理は製品非依存のシステム参加者としてモデル化した。", "振込失敗時の具体的な再実行・取消・照合手順は未確定だが、失敗を是正して振込を再実行する抽象経路としてモデル化した。"], "bpr": {"source_process": {"id": "expense_reimbursement_as_is", "version": "1.0"}, "source_analysis_version": "1.5", "source_analysis_id": "bpr-a-72939496e232d2e0", "applied_improvements": ["IMP-001", "IMP-002", "IMP-003", "IMP-004", "IMP-005", "IMP-006", "IMP-007", "IMP-008"], "conditional_improvements": [], "change_log": [{"improvement_id": "IMP-001", "title": "申請時の入力・エビデンス検証を標準化", "action": "applied", "summary": "初回申請と再申請に共通の入力ルール、必須項目、エビデンス要件、明確なエラーメッセージを定義し、送信前チェックを追加する。判断を要する経費妥当性は上長確認に残す。", "expected_effect": {"impact": "high", "notes": "差し戻し率と再申請工数の低減が見込まれるが、現状件数と差し戻し率が未確認のため定量効果は未算定。"}, "confidence": "high", "condition": null, "source_node_ids": ["submit_expense", "revise_resubmit"], "target_node_ids": ["submit_expense", "revise_resubmit"], "source_edge_ids": [], "target_edge_ids": []}, {"improvement_id": "IMP-002", "title": "差し戻し理由と再申請ルールを標準化", "action": "applied", "summary": "差し戻し理由コード、具体的指摘、修正対象、再申請期限、再確認対象を共通様式にし、上長・部門長の差し戻し情報を一つの履歴として追跡する。再申請後も不備が残る場合の扱いは業務ルールとして別途決定する。", "expected_effect": {"impact": "medium", "notes": "社員と承認者間の往復時の情報欠落を減らし、再差し戻しの抑制と履歴追跡性の向上が見込まれる。"}, "confidence": "high", "condition": null, "source_node_ids": ["manager_return", "department_head_return", "revise_resubmit"], "target_node_ids": ["manager_return", "department_head_return", "revise_resubmit"], "source_edge_ids": ["e13"], "target_edge_ids": ["e13"]}, {"improvement_id": "IMP-003", "title": "5万円基準の承認要否判定を自動化", "action": "applied", "summary": "申請金額をシステムで50000円と比較し、5万円以上は部門長審査へ、未満は承認完了合流へ自動ルーティングする。閾値変更権限と変更履歴を統制する。", "expected_effect": {"impact": "medium", "notes": "上長の定型確認を削減し、ルーティングの一貫性を高める。月間件数が未確認のため総工数効果は未算定。"}, "confidence": "high", "condition": null, "source_node_ids": ["check_amount"], "target_node_ids": ["amount_gateway"], "source_edge_ids": ["e05", "e08", "e09", "e10"], "target_edge_ids": ["e05", "e09", "e10"]}, {"improvement_id": "IMP-004", "title": "承認状態・通知・滞留を一元管理", "action": "applied", "summary": "上長・部門長の人的判断は維持しつつ、依頼通知、担当、状態、判断日時、コメント、差し戻し履歴を一元管理する。期限超過時の通知・エスカレーションはSLA決定後に設定する。", "expected_effect": {"impact": "high", "notes": "承認状況の可視化、担当間ハンドオフの追跡、滞留把握の改善が見込まれる。"}, "confidence": "medium", "condition": null, "source_node_ids": ["manager_review", "department_head_review", "manager_return", "department_head_return"], "target_node_ids": ["manager_review", "department_head_review", "manager_return", "department_head_return"], "source_edge_ids": [], "target_edge_ids": []}, {"improvement_id": "IMP-005", "title": "会計システムへの再入力を連携に置換", "action": "applied", "summary": "必要承認後の申請データを標準マッピングで会計システムへ連携し、手入力を廃止する。成功・失敗・失敗理由を申請単位で記録し、失敗時のみ経理担当者が原因確認、データ修正、再実行を行う。", "expected_effect": {"impact": "high", "notes": "経理の転記工数と入力エラーを大きく削減できる可能性があるが、件数と現行エラー率は未確認。"}, "confidence": "medium", "condition": null, "source_node_ids": ["register_accounting", "correct_registration"], "target_node_ids": ["register_accounting", "correct_registration", "registration_error_gateway"], "source_edge_ids": [], "target_edge_ids": []}, {"improvement_id": "IMP-006", "title": "エビデンス保管を自動化し申請と関連付け", "action": "applied", "summary": "必要承認後、エビデンスを所定の保管先へ自動保存し、申請ID、保存先、保存結果、版を記録する。失敗・重複・欠損時のみ経理担当者が是正して再実行する。", "expected_effect": {"impact": "medium", "notes": "保管作業の削減と追跡性向上が見込まれる。保存件数と保管要件が未確認のため定量効果は未算定。"}, "confidence": "medium", "condition": null, "source_node_ids": ["store_evidence"], "target_node_ids": ["store_evidence", "evidence_result_gateway", "correct_evidence_storage"], "source_edge_ids": [], "target_edge_ids": []}, {"improvement_id": "IMP-007", "title": "並行処理の完了・失敗・滞留を統制", "action": "applied", "summary": "申請単位で会計登録とエビデンス保管の状態を管理し、両方成功時のみ振込可能とする。どちらかが失敗または期限超過の場合は担当者へ通知し、是正後に当該処理を再実行する。振込への迂回は許可しない。", "expected_effect": {"impact": "high", "notes": "振込前提の欠落、片側未完了の見逃し、滞留の不可視化を防ぎ、統制を強化する。"}, "confidence": "high", "condition": null, "source_node_ids": ["register_accounting", "correct_registration", "store_evidence", "bank_transfer"], "target_node_ids": ["register_accounting", "correct_registration", "store_evidence", "bank_transfer", "parallel_split", "parallel_join", "registration_error_gateway", "evidence_result_gateway"], "source_edge_ids": ["e19", "e20", "e22", "e24"], "target_edge_ids": ["e19", "e20", "e22", "e25", "e26", "e27"]}, {"improvement_id": "IMP-008", "title": "振込入力と実行結果の記録を標準化", "action": "applied", "summary": "振込対象、金額、口座参照、支払日、申請IDを標準入力とし、振込受付番号、実行日時、成否、失敗理由を結果として記録する。失敗時の再実行・取消・照合手順は業務ルールとして定義する。", "expected_effect": {"impact": "medium", "notes": "振込結果の追跡と後続照合を容易にし、完了判定の曖昧さを減らす。"}, "confidence": "medium", "condition": null, "source_node_ids": ["bank_transfer"], "target_node_ids": ["bank_transfer", "transfer_result_gateway", "resolve_transfer_failure"], "source_edge_ids": ["e24"], "target_edge_ids": ["e28", "e29", "e30", "e31"]}], "source_node_context": {"submit_expense": {"name": "申請内容とエビデンスを登録して申請", "participant": "employee", "system": "Power Apps 経費精算アプリ", "issues": []}, "manager_review": {"name": "申請内容とエビデンスを確認", "participant": "manager", "issues": []}, "manager_return": {"name": "社員へ差し戻し", "participant": "manager", "issues": []}, "revise_resubmit": {"name": "内容を修正して再申請", "participant": "employee", "system": "Power Apps 経費精算アプリ", "issues": []}, "check_amount": {"name": "申請金額を確認", "participant": "manager", "issues": []}, "department_head_review": {"name": "申請を審査", "participant": "department_head", "issues": []}, "department_head_return": {"name": "社員へ差し戻し", "participant": "department_head", "issues": []}, "register_accounting": {"name": "会計システムへ経費情報を登録", "participant": "accounting", "system": "会計システム", "issues": []}, "correct_registration": {"name": "エラー内容を確認して修正", "participant": "accounting", "system": "会計システム", "issues": []}, "store_evidence": {"name": "エビデンスを所定の保管先へ保管", "participant": "accounting", "issues": []}, "bank_transfer": {"name": "振込処理", "participant": "accounting", "issues": []}}, "performance_targets": [{"metric": "部門長承認ルーティングの手動判定件数", "baseline": null, "target": "0", "direction": "decrease", "note": "固定閾値判定を自動化するため正常系の手動判定を廃止する。", "related_improvements": ["IMP-003"], "source_node_ids": ["check_amount"], "target_node_ids": ["amount_gateway"]}, {"metric": "申請差し戻し率", "baseline": null, "target": null, "direction": "decrease", "note": "入力検証と差し戻し標準化の導入後に測定し目標値を設定する。", "related_improvements": ["IMP-001", "IMP-002"], "source_node_ids": ["submit_expense", "manager_return", "department_head_return", "revise_resubmit"], "target_node_ids": ["submit_expense", "manager_return", "department_head_return", "revise_resubmit"]}, {"metric": "承認リードタイムとSLA超過件数", "baseline": null, "target": null, "direction": "decrease", "note": "現時点ではSLAが未決定のため目標値は未設定とし、SLA決定後に設定する。", "related_improvements": ["IMP-004"], "source_node_ids": ["manager_review", "department_head_review"], "target_node_ids": ["manager_review", "department_head_review"]}, {"metric": "会計システムへの手入力件数", "baseline": null, "target": "0（正常系）", "direction": "decrease", "note": "正常系の手入力を廃止し、例外時だけ人が是正する。", "related_improvements": ["IMP-005"], "source_node_ids": ["register_accounting"], "target_node_ids": ["register_accounting"]}, {"metric": "エビデンス手動保管件数", "baseline": null, "target": "0（正常系）", "direction": "decrease", "note": "正常系の手動保管を廃止し、例外時だけ人が是正する。", "related_improvements": ["IMP-006"], "source_node_ids": ["store_evidence"], "target_node_ids": ["store_evidence"]}, {"metric": "並行処理の片側未完了による統制逸脱件数", "baseline": null, "target": "0", "direction": "decrease", "note": "両方成功した場合のみ振込へ進むControl Flowから決定的に導かれる統制目標。", "related_improvements": ["IMP-007"], "source_node_ids": ["register_accounting", "store_evidence", "bank_transfer"], "target_node_ids": ["register_accounting", "store_evidence", "bank_transfer"]}, {"metric": "振込結果の未記録件数", "baseline": null, "target": "0", "direction": "decrease", "note": "振込結果を必ず記録し、成否を明示分岐する設計上の目標。", "related_improvements": ["IMP-008"], "source_node_ids": ["bank_transfer"], "target_node_ids": ["bank_transfer"]}], "issue_disposition": {}, "open_question_disposition": [{"source": "IMP-001", "question": "現行の差し戻し理由別件数と差し戻し率はどの程度か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-001", "question": "Power Appsアプリで実装可能な入力検証方式と改修権限は何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-002", "question": "再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-002", "question": "部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-003", "question": "閾値変更の承認者と変更履歴の保管要件は何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-003", "question": "税・外貨換算・複数明細の場合に判定対象とする金額は何か", "status": "resolved", "materiality": "blocking", "resolution": "5万円以上の判定には、申請単位の精算予定総額（税込・日本円換算後）を使用する。複数明細は合算し、外貨明細は組織で定める換算ルールにより日本円へ換算する。", "note": "Material Business Rule Gateで確定。"}, {"source": "IMP-004", "question": "SLAと期限超過時の通知・エスカレーション経路は何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-004", "question": "代理承認、承認取消、再割当の許容ルールは何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-004", "question": "Power Automate承認機能に必要なライセンスと環境権限を満たすか", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-005", "question": "会計システムが提供するAPIまたは入出力ファイル仕様は何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-005", "question": "連携失敗時の再実行上限と経理担当者への通知方法は何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-005", "question": "自動登録後の取消・訂正処理はどの経路で行うか", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-006", "question": "所定の保管先と法令・監査上の保持要件は何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-006", "question": "元ファイル、変換後ファイル、版のどれを保持対象とするか", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-006", "question": "保存失敗時の再実行と手動是正の責任者は誰か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-007", "question": "並行処理の期限超過判定に用いるSLAは何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-007", "question": "会計登録失敗と保管失敗の例外責任者は同一か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-007", "question": "片側が長期停止した場合の申請取消または手動振込の許可ルールは何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-008", "question": "振込処理で利用するシステムまたは銀行チャネルは何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-008", "question": "振込失敗時の再実行、取消、照合、承認ルールは何か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "IMP-008", "question": "振込結果と会計登録結果の照合責任者は誰か", "status": "carried_forward", "materiality": "non_blocking", "note": "製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。"}, {"source": "analysis", "question": "改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。", "status": "carried_forward", "materiality": "non_blocking", "note": "効果測定および統制設計のため継続確認する。"}, {"source": "analysis", "question": "規程、監査、保持、権限分離の要件が未確認である。", "status": "carried_forward", "materiality": "non_blocking", "note": "効果測定および統制設計のため継続確認する。"}]}}}</script>
+<script type="application/json" id="layout-data">{"lane_by_node": {"start": "employee", "submit_expense": "employee", "manager_review": "manager", "defect_gateway": "manager", "manager_return": "manager", "revise_resubmit": "employee", "amount_gateway": "automation_system", "department_head_review": "department_head", "approval_gateway": "department_head", "department_head_return": "department_head", "approval_merge": "accounting", "parallel_split": "automation_system", "register_accounting": "automation_system", "registration_error_gateway": "automation_system", "correct_registration": "accounting", "store_evidence": "automation_system", "evidence_result_gateway": "automation_system", "correct_evidence_storage": "accounting", "parallel_join": "automation_system", "bank_transfer": "accounting", "transfer_result_gateway": "accounting", "resolve_transfer_failure": "accounting", "end": "accounting"}, "lane_inferences": [], "jump_edges": {"e07": {"id": "R1", "source_node": "revise_resubmit", "target_node": "manager_review", "source_name": "内容を修正して再申請", "target_name": "申請内容とエビデンスを確認", "edge_label": "", "route_length": 1800.0, "backtrack": 1160}, "e14": {"id": "R2", "source_node": "department_head_return", "target_node": "revise_resubmit", "source_name": "社員へ差し戻し", "target_name": "内容を修正して再申請", "edge_label": "", "route_length": 2080.0, "backtrack": 850}, "e21": {"id": "R3", "source_node": "correct_registration", "target_node": "register_accounting", "source_name": "会計連携の例外を是正", "target_name": "会計システムへ経費情報を連携", "edge_label": "", "route_length": 2134.0, "backtrack": 850}, "e27": {"id": "R4", "source_node": "correct_evidence_storage", "target_node": "store_evidence", "source_name": "エビデンス保管の例外を是正", "target_name": "エビデンスを自動保管", "edge_label": "", "route_length": 1742.0, "backtrack": 850}, "e31": {"id": "R5", "source_node": "resolve_transfer_failure", "target_node": "bank_transfer", "source_name": "振込失敗を是正", "target_name": "振込を実行して結果を記録", "edge_label": "", "route_length": 1276.0, "backtrack": 850}}}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('process-data').textContent);
+  const layoutData = JSON.parse(document.getElementById('layout-data').textContent);
+  const nodes = Object.fromEntries((data.nodes || []).map(n => [String(n.id), n]));
+  const participants = Object.fromEntries((data.participants || []).map(p => [String(p.id), p]));
+  const bprMeta = data.metadata?.bpr || null;
+  const bprChangeLog = Array.isArray(bprMeta?.change_log) ? bprMeta.change_log : [];
+  const bprSourceNodeContext = bprMeta?.source_node_context || {};
+  const bprPerformanceTargets = Array.isArray(bprMeta?.performance_targets) ? bprMeta.performance_targets : [];
+  const isToBe = !!bprMeta;
+  const inferredNodeIds = new Set((layoutData.lane_inferences || []).map(x => String(x.node)));
+  const details = document.getElementById('details');
+  const main = document.getElementById('main-layout');
+  const viewer = document.getElementById('viewer');
+  const toolbar = document.getElementById('viewer-toolbar');
+  const svg = document.getElementById('process-svg');
+  const toggleReturnRoutes = document.getElementById('toggle-return-routes');
+  const zoomRange = document.getElementById('zoom-range');
+  const zoomValue = document.getElementById('zoom-value');
+  const toggleDetails = document.getElementById('toggle-details');
+  const baseWidth = Number(svg.getAttribute('width')) || 4330;
+  const baseHeight = Number(svg.getAttribute('height')) || 1386;
+  const MIN_ZOOM = 0.05;
+  const MAX_ZOOM = 2.0;
+  let zoom = 1;
+  let fitMode = 'none';
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const list = v => Array.isArray(v) && v.length ? v.map(x => `<span class="badge">${esc(x)}</span>`).join('') : '<span class="empty">未設定</span>';
+  const issueList = v => Array.isArray(v) && v.length ? `<ul class="issue-list">${v.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<span class="empty">未設定</span>';
+  const row = (k, v) => `<div class="detail-row"><dt>${esc(k)}</dt><dd>${v}</dd></div>`;
+  const qualityLabel = v => ({high:'高',medium:'中',low:'低'}[String(v||'')] || String(v||'未設定'));
+  function changesForNode(id) {
+    return bprChangeLog.filter(c => Array.isArray(c?.target_node_ids) && c.target_node_ids.map(String).includes(String(id)));
+  }
+  function improvementList(changes) {
+    if(!changes.length) return '<span class="empty">なし</span>';
+    return `<ul class="bpr-list">${changes.map(c => `<li class="bpr-item"><div class="bpr-head"><span class="bpr-id">${esc(c.improvement_id||'')}</span><strong>${esc(c.title||'')}</strong></div><div>${esc(c.summary||'')}</div></li>`).join('')}</ul>`;
+  }
+  function expectedEffectList(changes) {
+    if(!changes.length) return '<span class="empty">なし</span>';
+    return `<ul class="bpr-list">${changes.map(c => { const eff=c.expected_effect||{}; return `<li class="bpr-item"><div class="bpr-head"><span class="bpr-id">${esc(c.improvement_id||'')}</span><span>Impact: <b>${esc(qualityLabel(eff.impact))}</b> / 確度: <b>${esc(qualityLabel(c.confidence))}</b></span></div><div class="bpr-effect">${esc(eff.notes||'未設定')}</div></li>`; }).join('')}</ul>`;
+  }
+  function conditionList(changes) {
+    const conditioned=changes.filter(c => String(c?.condition||'').trim());
+    if(!conditioned.length) return '<span class="empty">なし</span>';
+    return `<ul class="bpr-list">${conditioned.map(c => `<li class="bpr-item"><div class="bpr-head"><span class="bpr-id">${esc(c.improvement_id||'')}</span></div><div>${esc(c.condition)}</div></li>`).join('')}</ul>`;
+  }
+
+  function performanceTargetsForNode(id) {
+    return bprPerformanceTargets.filter(t => Array.isArray(t?.target_node_ids) && t.target_node_ids.map(String).includes(String(id)));
+  }
+  const directionLabel = v => ({decrease:'減少',increase:'増加',maintain:'維持'}[String(v||'')] || String(v||'未設定'));
+  function performanceTargetList(targets) {
+    if(!targets.length) return '<span class="empty">なし</span>';
+    return `<ul class="bpr-list">${targets.map(t => {
+      const baseline = t.baseline === null || t.baseline === undefined || String(t.baseline).trim()==='' ? '未測定' : String(t.baseline);
+      const target = t.target === null || t.target === undefined || String(t.target).trim()==='' ? '目標値未設定' : String(t.target);
+      const rel = Array.isArray(t.related_improvements) && t.related_improvements.length ? ` <span class="muted">(${t.related_improvements.map(esc).join(' / ')})</span>` : '';
+      return `<li class="bpr-item"><div class="bpr-head"><strong>${esc(t.metric||'')}</strong><span>${esc(directionLabel(t.direction))}</span>${rel}</div><div>Baseline: <b>${esc(baseline)}</b> → Target: <b>${esc(target)}</b></div><div class="bpr-effect">${esc(t.note||'')}</div></li>`;
+    }).join('')}</ul>`;
+  }
+
+  function clampZoom(value) { return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value)); }
+  function applyZoom(value, preserveCenter = true) {
+    const next = clampZoom(value);
+    const old = zoom;
+    const centerX = viewer.scrollLeft + viewer.clientWidth / 2;
+    const centerY = viewer.scrollTop + viewer.clientHeight / 2;
+    zoom = next;
+    svg.style.width = `${baseWidth * zoom}px`;
+    svg.style.height = `${baseHeight * zoom}px`;
+    const percent = Math.round(zoom * 100);
+    zoomRange.value = String(Math.max(5, Math.min(200, Math.round(percent / 5) * 5)));
+    zoomValue.textContent = `${percent}%`;
+    if (preserveCenter && old > 0) {
+      const ratio = zoom / old;
+      requestAnimationFrame(() => {
+        viewer.scrollLeft = Math.max(0, centerX * ratio - viewer.clientWidth / 2);
+        viewer.scrollTop = Math.max(0, centerY * ratio - viewer.clientHeight / 2);
+      });
+    }
+  }
+  function fitToView() {
+    const availableWidth = Math.max(120, viewer.clientWidth - 46);
+    const availableHeight = Math.max(120, viewer.clientHeight - toolbar.offsetHeight - 46);
+    const fit = Math.min(1, availableWidth / baseWidth, availableHeight / baseHeight);
+    fitMode = 'all';
+    applyZoom(fit, false);
+    requestAnimationFrame(() => { viewer.scrollLeft = 0; viewer.scrollTop = 0; });
+  }
+  function fitToWidth() {
+    const availableWidth = Math.max(120, viewer.clientWidth - 46);
+    const fit = Math.min(1, availableWidth / baseWidth);
+    fitMode = 'width';
+    applyZoom(fit, false);
+    requestAnimationFrame(() => { viewer.scrollLeft = 0; });
+  }
+  function manualZoom(value) { fitMode = 'none'; applyZoom(value); }
+
+  document.getElementById('zoom-out').addEventListener('click', () => manualZoom(zoom - 0.10));
+  document.getElementById('zoom-in').addEventListener('click', () => manualZoom(zoom + 0.10));
+  document.getElementById('zoom-reset').addEventListener('click', () => manualZoom(1));
+  document.getElementById('zoom-fit-width').addEventListener('click', fitToWidth);
+  document.getElementById('zoom-fit').addEventListener('click', fitToView);
+  zoomRange.addEventListener('input', () => manualZoom(Number(zoomRange.value) / 100));
+
+  if (toggleReturnRoutes) {
+    toggleReturnRoutes.addEventListener('click', () => {
+      const showing = svg.classList.toggle('show-full-returns');
+      toggleReturnRoutes.textContent = showing ? '戻り線を省略' : '戻り線を表示';
+      toggleReturnRoutes.setAttribute('aria-pressed', String(showing));
+    });
+  }
+
+  toggleDetails.addEventListener('click', () => {
+    const hidden = main.classList.toggle('details-hidden');
+    toggleDetails.textContent = hidden ? '詳細を表示' : '詳細を隠す';
+    toggleDetails.setAttribute('aria-pressed', String(hidden));
+    if (fitMode === 'all') requestAnimationFrame(fitToView);
+    if (fitMode === 'width') requestAnimationFrame(fitToWidth);
+  });
+  window.addEventListener('resize', () => { if (fitMode === 'all') requestAnimationFrame(fitToView); if (fitMode === 'width') requestAnimationFrame(fitToWidth); });
+
+  function show(id) {
+    const n = nodes[id]; if (!n) return;
+    document.querySelectorAll('.process-node').forEach(x => x.classList.toggle('selected', x.dataset.nodeId === id));
+    const explicitP = participants[String(n.participant)]?.name || n.participant || '';
+    const layoutLane = layoutData.lane_by_node?.[id];
+    const inferredP = layoutLane && participants[String(layoutLane)]?.name;
+    const p = explicitP || (inferredP ? `${inferredP}${inferredNodeIds.has(String(id)) ? '（表示上推定）' : ''}` : '未割当');
+    const auto = n.automation || {};
+    const exceptionOwner = auto.exception_owner ? (participants[String(auto.exception_owner)]?.name || auto.exception_owner) : '';
+    const sourceCtx = bprSourceNodeContext?.[String(id)] || null;
+    const changes = changesForNode(id);
+    const conditionedChanges = changes.filter(c => String(c?.condition||'').trim());
+    const traceRows = changes.length ?
+      row('反映した改善', improvementList(changes)) +
+      row('期待効果', expectedEffectList(changes)) +
+      (conditionedChanges.length ? row('採用条件', conditionList(changes)) : '') : '';
+    const targets = performanceTargetsForNode(id);
+    const measurementRows = isToBe ?
+      (sourceCtx ?
+        row('As-Isでの所要時間', esc(sourceCtx.duration || '未設定')) +
+        row('As-Isでの頻度', esc(sourceCtx.frequency || '未設定')) +
+        row('As-Isでの課題', issueList(sourceCtx.issues)) : '') +
+      (targets.length ? row('目標・期待値', performanceTargetList(targets)) : '') +
+      (n.type === 'task' ? row('To-Beで残る課題', issueList(n.issues)) : '') :
+      row('所要時間', esc(n.duration || '未設定')) + row('頻度', esc(n.frequency || '未設定')) + row('課題', issueList(n.issues));
+    details.innerHTML = `<h2>${esc(n.name || id)}</h2><dl>` +
+      row('種類', esc(n.type || '')) + row('担当', esc(p)) +
+      row('説明', esc(n.description || '未設定')) + row('利用システム', esc(n.system || '未設定')) +
+      row('入力', list(n.inputs)) + row('出力', list(n.outputs)) +
+      measurementRows + traceRows +
+      row('自動化候補', auto.candidate === true ? 'あり' : auto.candidate === false ? 'なし' : '未評価') +
+      (exceptionOwner ? row('例外対応責任者', esc(exceptionOwner)) : '') +
+      row('自動化メモ', esc(auto.notes || '未設定')) + '</dl>';
+  }
+  document.querySelectorAll('.process-node').forEach(el => {
+    el.addEventListener('click', () => show(el.dataset.nodeId));
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(el.dataset.nodeId); } });
+  });
+})();
+</script>
+</body>
+</html>
