@@ -60,3 +60,9 @@ BPR Agent で To-Be を作成する場合、改善案はユーザーが明示的
 
 - [Privacy Statement](./PRIVACY.md)
 - [Terms of Use](./TERMS.md)
+
+
+## License
+
+コードおよびドキュメントは [MIT License](./LICENSE) で公開しています。
+Microsoft 製品・サービスおよび第三者のコンテンツには、それぞれの利用条件が適用されます。
