@@ -1,0 +1,77 @@
+@startuml
+title 経費精算業務（To-Be）
+left to right direction
+skinparam shadowing false
+skinparam RoundCorner 8
+skinparam defaultTextAlignment center
+skinparam ArrowThickness 1
+
+rectangle "社員" as lane_employee {
+  circle "経費申請を開始" as n_start
+  rectangle "申請内容とエビデンスを登録して申請" as n_submit_expense
+  rectangle "内容を修正して再申請" as n_revise_resubmit
+}
+
+rectangle "直属の上長" as lane_manager {
+  rectangle "申請内容とエビデンスを確認" as n_manager_review
+  diamond "内容に不備があるか" as n_defect_gateway
+  rectangle "社員へ差し戻し" as n_manager_return
+}
+
+rectangle "部門長" as lane_department_head {
+  rectangle "申請を審査" as n_department_head_review
+  diamond "部門長の審査結果" as n_approval_gateway
+  rectangle "社員へ差し戻し" as n_department_head_return
+}
+
+rectangle "経理担当者" as lane_accounting {
+  diamond "必要な承認を完了" as n_approval_merge
+  rectangle "会計連携の例外を是正" as n_correct_registration
+  rectangle "エビデンス保管の例外を是正" as n_correct_evidence_storage
+  rectangle "振込を実行して結果を記録" as n_bank_transfer
+  diamond "振込が成功したか" as n_transfer_result_gateway
+  rectangle "振込失敗を是正" as n_resolve_transfer_failure
+  circle "経費精算を完了" as n_end
+}
+
+rectangle "自動処理" as lane_automation_system {
+  diamond "精算予定総額が5万円以上か" as n_amount_gateway
+  diamond "AND\n経理処理を並行開始" as n_parallel_split
+  rectangle "会計システムへ経費情報を連携" as n_register_accounting
+  diamond "会計連携が成功したか" as n_registration_error_gateway
+  rectangle "エビデンスを自動保管" as n_store_evidence
+  diamond "エビデンス保管が成功したか" as n_evidence_result_gateway
+  diamond "AND\n登録と保管の完了を待ち合わせ" as n_parallel_join
+}
+
+n_start --> n_submit_expense
+n_submit_expense --> n_manager_review
+n_manager_review --> n_defect_gateway
+n_defect_gateway --> n_manager_return : 不備あり [申請内容またはエビデンスに不備がある]
+n_defect_gateway --> n_amount_gateway : 不備なし
+n_manager_return --> n_revise_resubmit
+n_revise_resubmit --> n_manager_review
+n_amount_gateway --> n_department_head_review : 5万円以上 [申請単位の精算予定総額（税込・日本円換算後）が50000円以上]
+n_amount_gateway --> n_approval_merge : 5万円未満
+n_department_head_review --> n_approval_gateway
+n_approval_gateway --> n_approval_merge : 承認 [部門長が承認]
+n_approval_gateway --> n_department_head_return : 差し戻し
+n_department_head_return --> n_revise_resubmit
+n_approval_merge --> n_parallel_split
+n_parallel_split --> n_register_accounting
+n_parallel_split --> n_store_evidence
+n_register_accounting --> n_registration_error_gateway
+n_registration_error_gateway --> n_parallel_join : 成功 [会計連携が成功]
+n_registration_error_gateway --> n_correct_registration : 失敗・期限超過
+n_correct_registration --> n_register_accounting
+n_store_evidence --> n_evidence_result_gateway
+n_evidence_result_gateway --> n_parallel_join : 成功 [エビデンス保管が成功]
+n_evidence_result_gateway --> n_correct_evidence_storage : 失敗・期限超過
+n_correct_evidence_storage --> n_store_evidence
+n_parallel_join --> n_bank_transfer
+n_bank_transfer --> n_transfer_result_gateway
+n_transfer_result_gateway --> n_end : 成功 [振込が成功]
+n_transfer_result_gateway --> n_resolve_transfer_failure : 失敗
+n_resolve_transfer_failure --> n_bank_transfer
+
+@enduml

@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_expense_reimbursement_as_is" targetNamespace="https://example.local/business-process" exporter="Business Process Publisher Skill" exporterVersion="1.16.0">
+  <bpmn:process id="Process_expense_reimbursement_as_is" name="経費精算業務（As-Is）" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_expense_reimbursement_as_is">
+      <bpmn:lane id="Lane_employee" name="社員">
+        <bpmn:flowNodeRef>Node_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_submit_expense</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_revise_resubmit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_manager" name="直属の上長">
+        <bpmn:flowNodeRef>Node_manager_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_defect_gateway</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_manager_return</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_check_amount</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_amount_gateway</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_department_head" name="部門長">
+        <bpmn:flowNodeRef>Node_department_head_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_approval_gateway</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_department_head_return</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_accounting" name="経理担当者">
+        <bpmn:flowNodeRef>Node_approval_merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_parallel_split</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_register_accounting</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_registration_error_gateway</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_correct_registration</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_store_evidence</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_parallel_join</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_bank_transfer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Node_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Node_start" name="経費申請を開始" />
+    <bpmn:userTask id="Node_submit_expense" name="申請内容とエビデンスを登録して申請">
+      <bpmn:documentation>社員がPower Appsの経費精算アプリに申請内容と領収書などのエビデンスを登録し、経費申請を行う。</bpmn:documentation>
+    </bpmn:userTask>
+    <bpmn:task id="Node_manager_review" name="申請内容とエビデンスを確認">
+      <bpmn:documentation>直属の上長が経費申請の内容とエビデンスを確認し、不備の有無を判断する。</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Node_defect_gateway" name="内容に不備があるか" gatewayDirection="Diverging" default="Flow_e05" />
+    <bpmn:task id="Node_manager_return" name="社員へ差し戻し">
+      <bpmn:documentation>直属の上長が不備の内容を指摘して経費申請を社員へ差し戻す。</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:userTask id="Node_revise_resubmit" name="内容を修正して再申請">
+      <bpmn:documentation>社員が差し戻し指摘に基づいて申請内容またはエビデンスを修正し、Power Appsから再申請する。</bpmn:documentation>
+    </bpmn:userTask>
+    <bpmn:task id="Node_check_amount" name="申請金額を確認">
+      <bpmn:documentation>直属の上長が申請金額を確認し、部門長承認の要否を判定する。</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Node_amount_gateway" name="申請金額が5万円以上か" gatewayDirection="Diverging" default="Flow_e10" />
+    <bpmn:task id="Node_department_head_review" name="申請を審査">
+      <bpmn:documentation>部門長が5万円以上の経費申請を審査し、承認または却下を判断する。</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Node_approval_gateway" name="部門長の審査結果" gatewayDirection="Diverging" default="Flow_e13" />
+    <bpmn:task id="Node_department_head_return" name="社員へ差し戻し">
+      <bpmn:documentation>部門長が却下理由または修正指示を付して経費申請を社員へ差し戻す。</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Node_approval_merge" name="必要な承認を完了" gatewayDirection="Converging" />
+    <bpmn:parallelGateway id="Node_parallel_split" name="経理処理を並行開始" gatewayDirection="Diverging" />
+    <bpmn:userTask id="Node_register_accounting" name="会計システムへ経費情報を登録">
+      <bpmn:documentation>経理担当者が経費申請の情報を会計システムへ入力して登録する。登録結果は後続で入力エラーの有無を判定する。</bpmn:documentation>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Node_registration_error_gateway" name="入力エラーが発生したか" gatewayDirection="Diverging" default="Flow_e20" />
+    <bpmn:userTask id="Node_correct_registration" name="エラー内容を確認して修正">
+      <bpmn:documentation>経理担当者が入力エラー情報を確認し、登録内容を修正する。</bpmn:documentation>
+    </bpmn:userTask>
+    <bpmn:task id="Node_store_evidence" name="エビデンスを所定の保管先へ保管">
+      <bpmn:documentation>経理担当者が領収書などのエビデンスを所定の保管先へ保管する。</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:parallelGateway id="Node_parallel_join" name="登録と保管の完了を待ち合わせ" gatewayDirection="Converging" />
+    <bpmn:task id="Node_bank_transfer" name="振込処理">
+      <bpmn:documentation>会計システムへの登録とエビデンス保管の両方が完了した後、経理担当者が振込処理を行う。</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:endEvent id="Node_end" name="経費精算を完了" />
+    <bpmn:sequenceFlow id="Flow_e01" sourceRef="Node_start" targetRef="Node_submit_expense" />
+    <bpmn:sequenceFlow id="Flow_e02" sourceRef="Node_submit_expense" targetRef="Node_manager_review" />
+    <bpmn:sequenceFlow id="Flow_e03" sourceRef="Node_manager_review" targetRef="Node_defect_gateway" />
+    <bpmn:sequenceFlow id="Flow_e04" sourceRef="Node_defect_gateway" targetRef="Node_manager_return" name="不備あり">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">申請内容またはエビデンスに不備がある</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_e05" sourceRef="Node_defect_gateway" targetRef="Node_check_amount" name="不備なし" />
+    <bpmn:sequenceFlow id="Flow_e06" sourceRef="Node_manager_return" targetRef="Node_revise_resubmit" />
+    <bpmn:sequenceFlow id="Flow_e07" sourceRef="Node_revise_resubmit" targetRef="Node_manager_review" />
+    <bpmn:sequenceFlow id="Flow_e08" sourceRef="Node_check_amount" targetRef="Node_amount_gateway" />
+    <bpmn:sequenceFlow id="Flow_e09" sourceRef="Node_amount_gateway" targetRef="Node_department_head_review" name="5万円以上">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">申請金額が50000円以上</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_e10" sourceRef="Node_amount_gateway" targetRef="Node_approval_merge" name="5万円未満" />
+    <bpmn:sequenceFlow id="Flow_e11" sourceRef="Node_department_head_review" targetRef="Node_approval_gateway" />
+    <bpmn:sequenceFlow id="Flow_e12" sourceRef="Node_approval_gateway" targetRef="Node_approval_merge" name="承認">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">部門長が承認</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_e13" sourceRef="Node_approval_gateway" targetRef="Node_department_head_return" name="却下" />
+    <bpmn:sequenceFlow id="Flow_e14" sourceRef="Node_department_head_return" targetRef="Node_revise_resubmit" />
+    <bpmn:sequenceFlow id="Flow_e15" sourceRef="Node_approval_merge" targetRef="Node_parallel_split" />
+    <bpmn:sequenceFlow id="Flow_e16" sourceRef="Node_parallel_split" targetRef="Node_register_accounting" />
+    <bpmn:sequenceFlow id="Flow_e17" sourceRef="Node_parallel_split" targetRef="Node_store_evidence" />
+    <bpmn:sequenceFlow id="Flow_e18" sourceRef="Node_register_accounting" targetRef="Node_registration_error_gateway" />
+    <bpmn:sequenceFlow id="Flow_e19" sourceRef="Node_registration_error_gateway" targetRef="Node_correct_registration" name="入力エラーあり">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">会計システム登録時に入力エラーが発生</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_e20" sourceRef="Node_registration_error_gateway" targetRef="Node_parallel_join" name="入力エラーなし" />
+    <bpmn:sequenceFlow id="Flow_e21" sourceRef="Node_correct_registration" targetRef="Node_register_accounting" />
+    <bpmn:sequenceFlow id="Flow_e22" sourceRef="Node_store_evidence" targetRef="Node_parallel_join" />
+    <bpmn:sequenceFlow id="Flow_e23" sourceRef="Node_parallel_join" targetRef="Node_bank_transfer" />
+    <bpmn:sequenceFlow id="Flow_e24" sourceRef="Node_bank_transfer" targetRef="Node_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_expense_reimbursement_as_is">
+    <bpmndi:BPMNPlane id="BPMNPlane_expense_reimbursement_as_is" bpmnElement="Process_expense_reimbursement_as_is">
+      <bpmndi:BPMNShape id="Shape_Lane_employee" bpmnElement="Lane_employee" isHorizontal="true">
+        <dc:Bounds x="40" y="60" width="4250" height="190" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_manager" bpmnElement="Lane_manager" isHorizontal="true">
+        <dc:Bounds x="40" y="250" width="4250" height="292" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_department_head" bpmnElement="Lane_department_head" isHorizontal="true">
+        <dc:Bounds x="40" y="542" width="4250" height="214" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_accounting" bpmnElement="Lane_accounting" isHorizontal="true">
+        <dc:Bounds x="40" y="756" width="4250" height="334" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_start" bpmnElement="Node_start">
+        <dc:Bounds x="220" y="129.0" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_submit_expense" bpmnElement="Node_submit_expense">
+        <dc:Bounds x="530" y="109.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_manager_review" bpmnElement="Node_manager_review">
+        <dc:Bounds x="840" y="350.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_defect_gateway" bpmnElement="Node_defect_gateway">
+        <dc:Bounds x="1150" y="360.0" width="72" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_manager_return" bpmnElement="Node_manager_return">
+        <dc:Bounds x="1460" y="290.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_check_amount" bpmnElement="Node_check_amount">
+        <dc:Bounds x="1460" y="410.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_revise_resubmit" bpmnElement="Node_revise_resubmit">
+        <dc:Bounds x="1770" y="109.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_amount_gateway" bpmnElement="Node_amount_gateway">
+        <dc:Bounds x="1770" y="420.0" width="72" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_department_head_review" bpmnElement="Node_department_head_review">
+        <dc:Bounds x="2080" y="603.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_approval_gateway" bpmnElement="Node_approval_gateway">
+        <dc:Bounds x="2390" y="613.0" width="72" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_department_head_return" bpmnElement="Node_department_head_return">
+        <dc:Bounds x="2700" y="603.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_approval_merge" bpmnElement="Node_approval_merge">
+        <dc:Bounds x="2080" y="887.0" width="72" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_parallel_split" bpmnElement="Node_parallel_split">
+        <dc:Bounds x="2390" y="887.0" width="72" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_register_accounting" bpmnElement="Node_register_accounting">
+        <dc:Bounds x="2700" y="817.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_store_evidence" bpmnElement="Node_store_evidence">
+        <dc:Bounds x="2700" y="937.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_registration_error_gateway" bpmnElement="Node_registration_error_gateway">
+        <dc:Bounds x="3010" y="827.0" width="72" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_parallel_join" bpmnElement="Node_parallel_join">
+        <dc:Bounds x="3320" y="887.0" width="72" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_correct_registration" bpmnElement="Node_correct_registration">
+        <dc:Bounds x="3320" y="774" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_bank_transfer" bpmnElement="Node_bank_transfer">
+        <dc:Bounds x="3630" y="877.0" width="230" height="92" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Node_end" bpmnElement="Node_end">
+        <dc:Bounds x="3940" y="897.0" width="52" height="52" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_e01" bpmnElement="Flow_e01">
+        <di:waypoint x="272" y="155.0" />
+        <di:waypoint x="530" y="155.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e02" bpmnElement="Flow_e02">
+        <di:waypoint x="760" y="155.0" />
+        <di:waypoint x="800.0" y="155.0" />
+        <di:waypoint x="800.0" y="396.0" />
+        <di:waypoint x="840" y="396.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e03" bpmnElement="Flow_e03">
+        <di:waypoint x="1070" y="396.0" />
+        <di:waypoint x="1150" y="396.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e04" bpmnElement="Flow_e04">
+        <di:waypoint x="1222" y="396.0" />
+        <di:waypoint x="1341.0" y="396.0" />
+        <di:waypoint x="1341.0" y="336.0" />
+        <di:waypoint x="1460" y="336.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e05" bpmnElement="Flow_e05">
+        <di:waypoint x="1222" y="396.0" />
+        <di:waypoint x="1341.0" y="396.0" />
+        <di:waypoint x="1341.0" y="456.0" />
+        <di:waypoint x="1460" y="456.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e06" bpmnElement="Flow_e06">
+        <di:waypoint x="1690" y="336.0" />
+        <di:waypoint x="1730.0" y="336.0" />
+        <di:waypoint x="1730.0" y="155.0" />
+        <di:waypoint x="1770" y="155.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e07" bpmnElement="Flow_e07">
+        <di:waypoint x="2000" y="155.0" />
+        <di:waypoint x="2042" y="155.0" />
+        <di:waypoint x="2042" y="20.0" />
+        <di:waypoint x="798" y="20.0" />
+        <di:waypoint x="798" y="396.0" />
+        <di:waypoint x="840" y="396.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e08" bpmnElement="Flow_e08">
+        <di:waypoint x="1690" y="456.0" />
+        <di:waypoint x="1770" y="456.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e09" bpmnElement="Flow_e09">
+        <di:waypoint x="1842" y="456.0" />
+        <di:waypoint x="1961.0" y="456.0" />
+        <di:waypoint x="1961.0" y="649.0" />
+        <di:waypoint x="2080" y="649.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e10" bpmnElement="Flow_e10">
+        <di:waypoint x="1842" y="456.0" />
+        <di:waypoint x="1961.0" y="456.0" />
+        <di:waypoint x="1961.0" y="923.0" />
+        <di:waypoint x="2080" y="923.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e11" bpmnElement="Flow_e11">
+        <di:waypoint x="2310" y="649.0" />
+        <di:waypoint x="2390" y="649.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e12" bpmnElement="Flow_e12">
+        <di:waypoint x="2462" y="649.0" />
+        <di:waypoint x="2504" y="649.0" />
+        <di:waypoint x="2504" y="487.0" />
+        <di:waypoint x="2038" y="487.0" />
+        <di:waypoint x="2038" y="923.0" />
+        <di:waypoint x="2080" y="923.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e13" bpmnElement="Flow_e13">
+        <di:waypoint x="2462" y="649.0" />
+        <di:waypoint x="2700" y="649.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e14" bpmnElement="Flow_e14">
+        <di:waypoint x="2930" y="649.0" />
+        <di:waypoint x="2972" y="649.0" />
+        <di:waypoint x="2972" y="20.0" />
+        <di:waypoint x="1728" y="20.0" />
+        <di:waypoint x="1728" y="155.0" />
+        <di:waypoint x="1770" y="155.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e15" bpmnElement="Flow_e15">
+        <di:waypoint x="2152" y="923.0" />
+        <di:waypoint x="2390" y="923.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e16" bpmnElement="Flow_e16">
+        <di:waypoint x="2462" y="923.0" />
+        <di:waypoint x="2581.0" y="923.0" />
+        <di:waypoint x="2581.0" y="863.0" />
+        <di:waypoint x="2700" y="863.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e17" bpmnElement="Flow_e17">
+        <di:waypoint x="2462" y="923.0" />
+        <di:waypoint x="2581.0" y="923.0" />
+        <di:waypoint x="2581.0" y="983.0" />
+        <di:waypoint x="2700" y="983.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e18" bpmnElement="Flow_e18">
+        <di:waypoint x="2930" y="863.0" />
+        <di:waypoint x="3010" y="863.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e19" bpmnElement="Flow_e19">
+        <di:waypoint x="3082" y="863.0" />
+        <di:waypoint x="3201.0" y="863.0" />
+        <di:waypoint x="3201.0" y="820.0" />
+        <di:waypoint x="3320" y="820.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e20" bpmnElement="Flow_e20">
+        <di:waypoint x="3082" y="863.0" />
+        <di:waypoint x="3201.0" y="863.0" />
+        <di:waypoint x="3201.0" y="923.0" />
+        <di:waypoint x="3320" y="923.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e21" bpmnElement="Flow_e21">
+        <di:waypoint x="3550" y="820.0" />
+        <di:waypoint x="3602" y="820.0" />
+        <di:waypoint x="3602" y="1110.0" />
+        <di:waypoint x="2646" y="1110.0" />
+        <di:waypoint x="2646" y="863.0" />
+        <di:waypoint x="2700" y="863.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e22" bpmnElement="Flow_e22">
+        <di:waypoint x="2930" y="983.0" />
+        <di:waypoint x="3125.0" y="983.0" />
+        <di:waypoint x="3125.0" y="923.0" />
+        <di:waypoint x="3320" y="923.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e23" bpmnElement="Flow_e23">
+        <di:waypoint x="3392" y="923.0" />
+        <di:waypoint x="3630" y="923.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_e24" bpmnElement="Flow_e24">
+        <di:waypoint x="3860" y="923.0" />
+        <di:waypoint x="3940" y="923.0" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

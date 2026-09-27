@@ -1,0 +1,461 @@
+analysis_version: '1.5'
+source_process:
+  id: expense_reimbursement_as_is
+  name: 経費精算業務（As-Is）
+  version: '1.0'
+research_sources:
+- id: SRC-001
+  title: Power Automate での承認ワークフローを作成し、テストします
+  publisher: Microsoft Learn
+  url: https://learn.microsoft.com/ja-jp/power-automate/modern-approvals
+  note: Power Automateで承認要求、承認者応答、結果通知、状態更新を構成できることを確認。
+- id: SRC-002
+  title: Power Automate の承認を始めましょう
+  publisher: Microsoft Learn
+  url: https://learn.microsoft.com/ja-jp/power-automate/get-started-approvals
+  note: 経費精算を含む承認ユースケース、順次承認、ライセンスおよびDataverse前提を確認。
+- id: SRC-003
+  title: Power Automate 用 Microsoft SharePoint コネクタ
+  publisher: Microsoft Learn
+  url: https://learn.microsoft.com/ja-jp/sharepoint/dev/business-apps/power-automate/sharepoint-connector-actions-triggers
+  note: SharePointライブラリのファイル作成・変更を起点としたフローとファイル操作の実現可能性を確認。
+improvements:
+- id: IMP-001
+  title: 申請時の入力・エビデンス検証を標準化
+  scope: task
+  target_tasks:
+  - submit_expense
+  - revise_resubmit
+  recommendations:
+  - simplify
+  - standardize
+  - assist
+  rationale: As-Isでは申請後に上長が内容とエビデンスの不備を確認し、不備時は差し戻しと再申請のループになる。申請時点で必須項目、形式、エビデンス有無を共通基準で確認すれば、後工程の手戻りを抑えられる。
+  proposed_change: 初回申請と再申請に共通の入力ルール、必須項目、エビデンス要件、明確なエラーメッセージを定義し、送信前チェックを追加する。判断を要する経費妥当性は上長確認に残す。
+  expected_effect:
+    impact: high
+    notes: 差し戻し率と再申請工数の低減が見込まれるが、現状件数と差し戻し率が未確認のため定量効果は未算定。
+  priority:
+    effort: medium
+    risk: low
+    confidence: high
+  automation:
+    candidate: true
+    level: assist
+    notes: 形式・必須項目・エビデンス有無をシステムが検証し、社員が修正する。業務妥当性の判断は自動化しない。
+  dependencies:
+  - type: enhances
+    improvement_ids:
+    - IMP-002
+    note: 差し戻し理由の標準化と併用すると、予防ルールの継続改善に使える。
+  implementation_options: []
+  implementation_options_reason: 現在のPower Appsアプリのデータ構造と実装方式が不明なため、具体機能を固定せず業務ルールの標準化を先行する。
+  prerequisites:
+  - 経費区分別の必須項目とエビデンス要件を定義する
+  unresolved_questions:
+  - 現行の差し戻し理由別件数と差し戻し率はどの程度か
+  - Power Appsアプリで実装可能な入力検証方式と改修権限は何か
+  as_is_evidence:
+  - task_id: manager_review
+    note: 上長が申請内容とエビデンスの不備を確認する。
+  - task_id: revise_resubmit
+    note: 不備時は社員が内容またはエビデンスを修正して再申請する。
+  source_refs: []
+- id: IMP-002
+  title: 差し戻し理由と再申請ルールを標準化
+  scope: process
+  target_tasks:
+  - manager_return
+  - department_head_return
+  - revise_resubmit
+  recommendations:
+  - simplify
+  - consolidate
+  - standardize
+  rationale: 上長と部門長の双方に社員への差し戻しがあり、出力は同じ「差し戻し指摘」だが、理由分類、必須記載、再申請時の確認範囲が定義されていない。
+  proposed_change: 差し戻し理由コード、具体的指摘、修正対象、再申請期限、再確認対象を共通様式にし、上長・部門長の差し戻し情報を一つの履歴として追跡する。再申請後も不備が残る場合の扱いは業務ルールとして別途決定する。
+  expected_effect:
+    impact: medium
+    notes: 社員と承認者間の往復時の情報欠落を減らし、再差し戻しの抑制と履歴追跡性の向上が見込まれる。
+  priority:
+    effort: low
+    risk: low
+    confidence: high
+  automation:
+    candidate: true
+    level: assist
+    notes: 定型選択肢と必須コメントで記録を支援する。差し戻し判断そのものは人が行う。
+  dependencies:
+  - type: enhances
+    improvement_ids:
+    - IMP-001
+    - IMP-004
+    note: 申請時予防と承認状態管理を強化する。
+  implementation_options: []
+  implementation_options_reason: 差し戻し分類と再申請ルールの業務決定が先であり、記録先の製品選定は独立して行えるため。
+  prerequisites:
+  - 上長と部門長で共通利用できる差し戻し分類を合意する
+  unresolved_questions:
+  - 再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か
+  - 部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか
+  as_is_evidence:
+  - task_id: manager_return
+    note: 上長が不備内容を指摘して社員へ差し戻す。
+  - task_id: department_head_return
+    note: 部門長が却下理由または修正指示を付して社員へ差し戻す。
+  source_refs: []
+- id: IMP-003
+  title: 5万円基準の承認要否判定を自動化
+  scope: task
+  target_tasks:
+  - check_amount
+  recommendations:
+  - eliminate
+  - standardize
+  - automate
+  rationale: As-Isでは上長が申請金額を確認した直後、固定閾値50000円で部門長承認要否を判定する。構造化された申請金額に対する決定的な判定であり、手作業確認を廃止できる可能性が高い。
+  proposed_change: 申請金額をシステムで50000円と比較し、5万円以上は部門長審査へ、未満は承認完了合流へ自動ルーティングする。閾値変更権限と変更履歴を統制する。
+  expected_effect:
+    impact: medium
+    notes: 上長の定型確認を削減し、ルーティングの一貫性を高める。月間件数が未確認のため総工数効果は未算定。
+  priority:
+    effort: low
+    risk: medium
+    confidence: high
+  automation:
+    candidate: true
+    level: full
+    notes: 固定閾値判定を自動化し、人は例外と閾値ガバナンスを担う。
+  dependencies: []
+  implementation_options: []
+  implementation_options_reason: 現行アプリと後続承認基盤の接続方式が不明であり、業務上の自動判定を先に定義するため。
+  prerequisites:
+  - 申請金額が構造化された数値として取得できる
+  - 50000円の閾値が現行規程と一致することを確認する
+  unresolved_questions:
+  - 閾値変更の承認者と変更履歴の保管要件は何か
+  - 税・外貨換算・複数明細の場合に判定対象とする金額は何か
+  as_is_evidence:
+  - task_id: check_amount
+    note: 上長が申請金額を確認し部門長承認の要否を判定する。 後続Gatewayは50000円以上を部門長審査へ分岐する。
+  source_refs: []
+- id: IMP-004
+  title: 承認状態・通知・滞留を一元管理
+  scope: process
+  target_tasks:
+  - manager_review
+  - department_head_review
+  - manager_return
+  - department_head_return
+  recommendations:
+  - standardize
+  - automate
+  - retain
+  rationale: As-Isでは人による内容審査を維持する必要がある一方、承認依頼、結果、コメント、差し戻し、滞留の横断的な状態管理が明示されていない。担当間ハンドオフの見落としや追跡困難を防ぐ余地がある。
+  proposed_change: 上長・部門長の人的判断は維持しつつ、依頼通知、担当、状態、判断日時、コメント、差し戻し履歴を一元管理する。期限超過時の通知・エスカレーションはSLA決定後に設定する。
+  expected_effect:
+    impact: high
+    notes: 承認状況の可視化、担当間ハンドオフの追跡、滞留把握の改善が見込まれる。
+  priority:
+    effort: medium
+    risk: medium
+    confidence: medium
+  automation:
+    candidate: true
+    level: partial
+    notes: 依頼・通知・状態記録を自動化するが、審査と承認・却下判断は人が行う。
+  dependencies:
+  - type: enhances
+    improvement_ids:
+    - IMP-002
+    - IMP-003
+    note: 差し戻し標準化と自動ルーティングで状態の一貫性が高まる。
+  implementation_options:
+  - product_or_service: Power Automate
+    capability: 承認アクションとクラウドフロー
+    role: 承認依頼、応答待ち、結果通知、状態更新を制御する
+    fit: primary
+    confidence: medium
+    prerequisites:
+    - 利用可能ライセンスとDataverse環境条件を確認する
+    - 既存Power Appsとのトリガー・データ連携方式を確認する
+    source_refs:
+    - SRC-001
+    - SRC-002
+  prerequisites:
+  - 承認者決定ルールと代理承認ルールを定義する
+  - 状態と監査ログの保持要件を定義する
+  unresolved_questions:
+  - SLAと期限超過時の通知・エスカレーション経路は何か
+  - 代理承認、承認取消、再割当の許容ルールは何か
+  - Power Automate承認機能に必要なライセンスと環境権限を満たすか
+  as_is_evidence:
+  - task_id: manager_review
+    note: 上長が申請内容とエビデンスを確認する。
+  - task_id: department_head_review
+    note: 5万円以上は部門長が審査し承認または却下を判断する。
+  source_refs: []
+- id: IMP-005
+  title: 会計システムへの再入力を連携に置換
+  scope: task
+  target_tasks:
+  - register_accounting
+  - correct_registration
+  recommendations:
+  - eliminate
+  - standardize
+  - automate
+  rationale: As-IsではPower Appsで登録済みの経費申請情報を経理担当者が会計システムへ再入力し、入力エラー時は修正して再登録する。重複入力とエラーループが明確に存在する。
+  proposed_change: 必要承認後の申請データを標準マッピングで会計システムへ連携し、手入力を廃止する。成功・失敗・失敗理由を申請単位で記録し、失敗時のみ経理担当者が原因確認、データ修正、再実行を行う。
+  expected_effect:
+    impact: high
+    notes: 経理の転記工数と入力エラーを大きく削減できる可能性があるが、件数と現行エラー率は未確認。
+  priority:
+    effort: high
+    risk: high
+    confidence: medium
+  automation:
+    candidate: true
+    level: full
+    notes: 主処理は自動連携し、経理担当者は失敗・例外のみ処理する。会計システムの連携可否で実現性が変わる。
+  dependencies: []
+  implementation_options: []
+  implementation_options_reason: 会計システム名、API・ファイル連携仕様、認証、ライセンスが未確認のため具体製品候補を示せない。
+  prerequisites:
+  - 会計システムの連携インターフェースが利用可能
+  - 申請項目と会計項目のマッピングおよび勘定科目ルールを確定する
+  - 重複登録防止キーを定義する
+  unresolved_questions:
+  - 会計システムが提供するAPIまたは入出力ファイル仕様は何か
+  - 連携失敗時の再実行上限と経理担当者への通知方法は何か
+  - 自動登録後の取消・訂正処理はどの経路で行うか
+  as_is_evidence:
+  - task_id: register_accounting
+    note: 経理担当者が経費申請情報を会計システムへ入力して登録する。
+  - task_id: correct_registration
+    note: 入力エラー時は経理担当者が内容を修正して登録へ戻る。
+  source_refs: []
+- id: IMP-006
+  title: エビデンス保管を自動化し申請と関連付け
+  scope: task
+  target_tasks:
+  - store_evidence
+  recommendations:
+  - standardize
+  - automate
+  rationale: エビデンスは申請時にPower Appsへ登録済みだが、承認後に経理担当者が別途所定の保管先へ保管している。手作業移送と申請との紐付け不備を削減できる。
+  proposed_change: 必要承認後、エビデンスを所定の保管先へ自動保存し、申請ID、保存先、保存結果、版を記録する。失敗・重複・欠損時のみ経理担当者が是正して再実行する。
+  expected_effect:
+    impact: medium
+    notes: 保管作業の削減と追跡性向上が見込まれる。保存件数と保管要件が未確認のため定量効果は未算定。
+  priority:
+    effort: medium
+    risk: medium
+    confidence: medium
+  automation:
+    candidate: true
+    level: full
+    notes: 主処理は自動保存し、経理担当者は保存失敗や例外を処理する。
+  dependencies: []
+  implementation_options:
+  - product_or_service: Power Automate と SharePoint
+    capability: SharePointコネクタによるライブラリへのファイル操作と変更トリガー
+    role: エビデンスを規定ライブラリへ保存し保存結果を追跡する
+    fit: alternative
+    confidence: medium
+    prerequisites:
+    - 保管先がSharePointで要件を満たす
+    - 命名、メタデータ、アクセス権、保持要件を定義する
+    source_refs:
+    - SRC-003
+  prerequisites:
+  - 正式な保管先、命名規則、メタデータ、アクセス権、保持期間を定義する
+  - 申請IDとエビデンスを一意に関連付ける
+  unresolved_questions:
+  - 所定の保管先と法令・監査上の保持要件は何か
+  - 元ファイル、変換後ファイル、版のどれを保持対象とするか
+  - 保存失敗時の再実行と手動是正の責任者は誰か
+  as_is_evidence:
+  - task_id: submit_expense
+    note: 社員が申請時にエビデンスをPower Appsへ登録する。
+  - task_id: store_evidence
+    note: 経理担当者がエビデンスを所定の保管先へ保管する。
+  source_refs: []
+- id: IMP-007
+  title: 並行処理の完了・失敗・滞留を統制
+  scope: process
+  target_tasks:
+  - register_accounting
+  - correct_registration
+  - store_evidence
+  - bank_transfer
+  recommendations:
+  - standardize
+  - automate
+  rationale: As-Isでは会計登録とエビデンス保管を並行実行し、両方の完了後に振込処理へ進む。一方、保管側の失敗経路、片側滞留、期限超過時の扱いが明示されていない。
+  proposed_change: 申請単位で会計登録とエビデンス保管の状態を管理し、両方成功時のみ振込可能とする。どちらかが失敗または期限超過の場合は担当者へ通知し、是正後に当該処理を再実行する。振込への迂回は許可しない。
+  expected_effect:
+    impact: high
+    notes: 振込前提の欠落、片側未完了の見逃し、滞留の不可視化を防ぎ、統制を強化する。
+  priority:
+    effort: medium
+    risk: medium
+    confidence: high
+  automation:
+    candidate: true
+    level: partial
+    notes: 状態判定と通知は自動化候補。例外原因の是正は経理担当者が行う。
+  dependencies: []
+  implementation_options: []
+  implementation_options_reason: IMP-005とIMP-006の採否にかかわらず状態統制は成立するが、具体基盤は現在のデータストアと監視方式が未確認のため固定しない。
+  prerequisites:
+  - 会計登録と保管の成功・失敗状態を申請ID単位で記録できる
+  - 振込実行前に両状態を検証する統制点を設ける
+  unresolved_questions:
+  - 並行処理の期限超過判定に用いるSLAは何か
+  - 会計登録失敗と保管失敗の例外責任者は同一か
+  - 片側が長期停止した場合の申請取消または手動振込の許可ルールは何か
+  as_is_evidence:
+  - task_id: register_accounting
+    note: 会計登録はエビデンス保管と並行開始され、入力エラー時は修正ループへ入る。
+  - task_id: store_evidence
+    note: エビデンス保管は会計登録と並行実行される。
+  - task_id: bank_transfer
+    note: 並行する両処理の完了後に振込処理を行う。
+  source_refs: []
+- id: IMP-008
+  title: 振込入力と実行結果の記録を標準化
+  scope: task
+  target_tasks:
+  - bank_transfer
+  recommendations:
+  - standardize
+  - simplify
+  rationale: As-Isの振込処理は入力が経費申請、出力も経費申請のみで、振込対象情報、実行結果、失敗時の扱い、照合記録が明示されていない。
+  proposed_change: 振込対象、金額、口座参照、支払日、申請IDを標準入力とし、振込受付番号、実行日時、成否、失敗理由を結果として記録する。失敗時の再実行・取消・照合手順は業務ルールとして定義する。
+  expected_effect:
+    impact: medium
+    notes: 振込結果の追跡と後続照合を容易にし、完了判定の曖昧さを減らす。
+  priority:
+    effort: medium
+    risk: medium
+    confidence: medium
+  automation:
+    candidate: null
+    notes: 銀行連携方式と現行振込手段が不明なため、自動化可否は判断しない。
+  dependencies:
+  - type: enhances
+    improvement_ids:
+    - IMP-007
+    note: 並行完了統制と組み合わせると、振込開始条件と実行結果を一貫して追跡できる。
+  implementation_options: []
+  implementation_options_reason: 利用する銀行サービス、振込チャネル、API・ファイル仕様が未確認のため。
+  prerequisites:
+  - 振込に必要な入力情報と機微情報の取扱基準を定義する
+  unresolved_questions:
+  - 振込処理で利用するシステムまたは銀行チャネルは何か
+  - 振込失敗時の再実行、取消、照合、承認ルールは何か
+  - 振込結果と会計登録結果の照合責任者は誰か
+  as_is_evidence:
+  - task_id: bank_transfer
+    note: 会計登録とエビデンス保管の完了後に経理担当者が振込処理を行う。
+  source_refs: []
+as_is_open_question_coverage:
+- question: 各作業の標準所要時間
+  improvement_ids:
+  - IMP-001
+  - IMP-004
+  - IMP-005
+  - IMP-006
+  - IMP-007
+  - IMP-008
+  carried_forward: true
+  note: 改善前後の工数、滞留、例外処理時間の基準設定に必要なため未確認のまま追跡する。
+- question: 月間申請件数と繁閑差
+  improvement_ids:
+  - IMP-001
+  - IMP-003
+  - IMP-005
+  - IMP-006
+  carried_forward: true
+  note: 工数削減効果、処理容量、繁忙期の運用設計に必要なため未確認のまま追跡する。
+- question: プロセスオーナー
+  improvement_ids:
+  - IMP-002
+  - IMP-003
+  - IMP-004
+  - IMP-007
+  - IMP-008
+  carried_forward: true
+  note: ルール変更、例外統制、KPI管理の責任者として決定が必要。
+- question: SLA
+  improvement_ids:
+  - IMP-004
+  - IMP-007
+  carried_forward: true
+  note: 承認滞留と並行処理の期限超過判定に必要なため未確認のまま追跡する。
+process_pattern_coverage:
+- pattern: loop
+  present: true
+  related_tasks:
+  - manager_review
+  - manager_return
+  - department_head_return
+  - revise_resubmit
+  - register_accounting
+  - correct_registration
+  improvement_ids:
+  - IMP-001
+  - IMP-002
+  - IMP-005
+  note: 差し戻し再申請と会計登録エラーの再実行ループを、申請時予防、差し戻し標準化、例外型自動連携で扱う。
+- pattern: handoff
+  present: true
+  related_tasks:
+  - submit_expense
+  - manager_review
+  - manager_return
+  - revise_resubmit
+  - department_head_review
+  - department_head_return
+  - register_accounting
+  - store_evidence
+  - bank_transfer
+  improvement_ids:
+  - IMP-002
+  - IMP-004
+  - IMP-007
+  note: 社員、上長、部門長、経理間の受け渡しを、共通履歴、承認状態管理、並行処理統制で追跡する。
+- pattern: duplicate_entry
+  present: true
+  related_tasks:
+  - submit_expense
+  - register_accounting
+  improvement_ids:
+  - IMP-005
+  note: Power Appsで登録済みの経費情報を会計システムへ再入力する重複を、データ連携への置換で扱う。
+- pattern: parallel_dependency
+  present: true
+  related_tasks:
+  - register_accounting
+  - correct_registration
+  - store_evidence
+  - bank_transfer
+  improvement_ids:
+  - IMP-007
+  - IMP-008
+  note: 会計登録とエビデンス保管の完了待ち、片側失敗、滞留、振込開始条件を明示的に統制する。
+analysis_open_questions:
+- 改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。
+- 規程、監査、保持、権限分離の要件が未確認である。
+summary:
+  improvement_count: 8
+  task_scope_count: 5
+  process_scope_count: 3
+  high_impact_count: 4
+  analysis_open_question_count: 2
+  implementation_option_count: 2
+  as_is_open_question_coverage_count: 4
+  process_pattern_coverage_count: 4
+  process_pattern_present_count: 4
+analysis_id: bpr-a-72939496e232d2e0

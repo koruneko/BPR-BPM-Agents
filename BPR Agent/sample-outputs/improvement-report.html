@@ -1,0 +1,267 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BPR改善分析 - 経費精算業務（As-Is）</title>
+<style>
+:root{--undecided:#b7791f;--approved:#2f855a;--conditional:#2b6cb0;--hold:#805ad5;--rejected:#718096;font-family:"Segoe UI","Yu Gothic UI",sans-serif;color-scheme:light dark}*{box-sizing:border-box}body{margin:0;background:Canvas;color:CanvasText}header{padding:28px 32px;border-bottom:1px solid color-mix(in srgb,CanvasText 18%,transparent)}header h1{margin:0 0 8px;font-size:28px}header p{margin:0;opacity:.78;line-height:1.6}main{max-width:1280px;margin:auto;padding:24px}.notice{border:1px solid color-mix(in srgb,var(--undecided) 58%,CanvasText 20%);border-radius:12px;padding:16px 18px;margin-bottom:20px;background:color-mix(in srgb,Canvas 94%,var(--undecided) 6%);line-height:1.65}.summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:18px 0}.summary div{border:1px solid color-mix(in srgb,CanvasText 16%,transparent);border-radius:12px;padding:16px}.summary b{display:block;font-size:28px}.actions{position:sticky;top:0;z-index:10;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px;margin:0 0 18px;border:1px solid color-mix(in srgb,CanvasText 18%,transparent);border-radius:10px;background:color-mix(in srgb,Canvas 94%,transparent);backdrop-filter:blur(8px)}button,.decision,textarea{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid color-mix(in srgb,CanvasText 26%,transparent);background:Canvas;color:CanvasText}button{cursor:pointer}.progress{font-weight:700;margin-left:auto}.proposal{border:1px solid color-mix(in srgb,CanvasText 18%,transparent);border-left-width:6px;border-radius:14px;padding:22px;margin:0 0 20px;transition:border-color .15s ease,background .15s ease}.proposal[data-decision="undecided"]{border-left-color:var(--undecided);background:color-mix(in srgb,Canvas 98%,var(--undecided) 2%)}.proposal[data-decision="approved"]{border-left-color:var(--approved);background:color-mix(in srgb,Canvas 98%,var(--approved) 2%)}.proposal[data-decision="conditional_approved"]{border-left-color:var(--conditional);background:color-mix(in srgb,Canvas 98%,var(--conditional) 2%)}.proposal[data-decision="hold"]{border-left-color:var(--hold);background:color-mix(in srgb,Canvas 98%,var(--hold) 2%)}.proposal[data-decision="rejected"]{border-left-color:var(--rejected);opacity:.82}.proposal-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.proposal-head h2{margin:4px 0 6px;font-size:22px}.id-row{display:flex;align-items:center;gap:9px}.proposal-id{font-weight:700;opacity:.7}.decision-state{font-size:13px;font-weight:700;padding:3px 8px;border-radius:999px;background:color-mix(in srgb,var(--undecided) 16%,transparent);color:CanvasText}.proposal[data-decision="approved"] .decision-state{background:color-mix(in srgb,var(--approved) 18%,transparent)}.proposal[data-decision="conditional_approved"] .decision-state{background:color-mix(in srgb,var(--conditional) 18%,transparent)}.proposal[data-decision="hold"] .decision-state{background:color-mix(in srgb,var(--hold) 18%,transparent)}.proposal[data-decision="rejected"] .decision-state{background:color-mix(in srgb,var(--rejected) 18%,transparent)}.decision-box{min-width:210px}.decision-box label{display:block;font-size:13px;font-weight:700;margin-bottom:4px}.decision{width:100%}.decision-note-wrap{margin-top:8px;font-size:13px}.decision-note-wrap summary{cursor:pointer;opacity:.78}.decision-note-hint{margin-top:8px;padding:7px 9px;border-radius:7px;background:color-mix(in srgb,var(--conditional) 10%,transparent);font-weight:700;line-height:1.45}.decision-note{width:100%;margin-top:7px;resize:vertical;min-height:58px;font-size:14px}.decision-note.required{border:2px solid color-mix(in srgb,var(--conditional) 72%,CanvasText 20%)}.meta{display:flex;gap:18px;flex-wrap:wrap;opacity:.78;margin-bottom:10px}.badge{display:inline-block;padding:4px 9px;border-radius:999px;margin:0 6px 6px 0;background:color-mix(in srgb,CanvasText 10%,transparent)}.fit{font-size:12px;margin:0;border:1px solid transparent}.fit-primary{font-weight:700;background:color-mix(in srgb,var(--conditional) 16%,transparent);border-color:color-mix(in srgb,var(--conditional) 34%,transparent)}.fit-complementary{background:color-mix(in srgb,var(--approved) 10%,transparent);border-color:color-mix(in srgb,var(--approved) 22%,transparent)}.fit-alternative{background:color-mix(in srgb,CanvasText 8%,transparent)}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.grid4 div{padding:12px;border-radius:10px;background:color-mix(in srgb,CanvasText 7%,transparent)}.grid4 b,.grid4 span{display:block}.grid4 span{font-size:18px;margin-top:4px}section h3{font-size:15px;margin:16px 0 6px;opacity:.72}section p{white-space:pre-wrap;line-height:1.65;margin:0}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:18px}.implementation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.implementation-option{border:1px solid color-mix(in srgb,CanvasText 14%,transparent);border-radius:10px;padding:13px}.implementation-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.no-option{border-left:4px solid color-mix(in srgb,CanvasText 24%,transparent);padding:8px 12px;background:color-mix(in srgb,CanvasText 4%,transparent);border-radius:8px}.no-option p{margin-top:6px}.pattern-review{margin:20px 0}.pattern-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pattern-card{border:1px solid color-mix(in srgb,CanvasText 14%,transparent);border-radius:10px;padding:13px}.pattern-card p{margin:.5em 0 0;line-height:1.55}.pattern-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}.capability{font-weight:600;margin-top:4px}.option-meta{font-size:14px;margin-top:8px}.option-sub{font-size:14px;margin-top:8px}ul{margin:.4em 0;padding-left:1.4em}li{margin:.35em 0;line-height:1.55}.muted{opacity:.66}.source-id{font-size:12px;opacity:.65}.sources,.openq{border-top:1px solid color-mix(in srgb,CanvasText 16%,transparent);padding-top:18px;margin-top:28px}#copy-status{font-size:14px;opacity:.8}#decision-output-wrap{display:none;width:100%;padding-top:8px}#decision-output-wrap.visible{display:block}#decision-output{width:100%;min-height:150px;resize:vertical}.external-link{text-decoration:underline;text-underline-offset:2px}#external-link-status{display:none;width:100%;padding:9px 11px;border-radius:8px;background:color-mix(in srgb,var(--conditional) 9%,Canvas);line-height:1.45}#external-link-status.visible{display:block}@media(max-width:800px){.summary{grid-template-columns:1fr 1fr}.grid4,.twocol,.implementation-grid,.pattern-grid{grid-template-columns:1fr 1fr}.proposal-head{display:block}.decision-box{margin-top:10px;min-width:0}.progress{margin-left:0}}@media(max-width:520px){.summary,.grid4,.twocol,.implementation-grid,.pattern-grid{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>BPR改善分析レポート</h1><p>経費精算業務（As-Is） / As-Is 1.0 を基準にした改善提案です。これはTo-Be確定版ではありません。採用する改善案を人が判断した後にTo-Beを生成します。</p><p><b>分析ID:</b> <code>bpr-a-72939496e232d2e0</code></p></header>
+<main>
+<div class="notice"><b>Human Gate</b><br><b>未判断は「人による判断がまだ必要」な状態です。</b> 各提案を「採用 / 条件付き採用 / 保留 / 見送り」で判断してください。条件付き採用では採用条件の入力が必須です。To-Beには採用・条件付き採用だけを反映します。</div>
+<div class="summary"><div><span>改善案</span><b>8</b></div><div><span>Task単位</span><b>5</b></div><div><span>プロセス横断</span><b>3</b></div><div><span>高インパクト</span><b>4</b></div><div><span>実装候補</span><b>2</b></div></div>
+<section class="pattern-review"><h2>プロセス横断評価</h2><p class="muted">改善案数とは独立して、ループ・ハンドオフ・重複入力・並行依存を確認した結果です。</p><div class="pattern-grid"><div class="pattern-card"><div class="pattern-head"><strong>ループ・手戻り</strong><span class="badge">あり</span></div><div><b>関連Task:</b> 申請内容とエビデンスを確認 / 社員へ差し戻し / 社員へ差し戻し / 内容を修正して再申請 / 会計システムへ経費情報を登録 / エラー内容を確認して修正</div><div><b>関連改善:</b> IMP-001 / IMP-002 / IMP-005</div><p>差し戻し再申請と会計登録エラーの再実行ループを、申請時予防、差し戻し標準化、例外型自動連携で扱う。</p></div><div class="pattern-card"><div class="pattern-head"><strong>担当間ハンドオフ</strong><span class="badge">あり</span></div><div><b>関連Task:</b> 申請内容とエビデンスを登録して申請 / 申請内容とエビデンスを確認 / 社員へ差し戻し / 内容を修正して再申請 / 申請を審査 / 社員へ差し戻し / 会計システムへ経費情報を登録 / エビデンスを所定の保管先へ保管 / 振込処理</div><div><b>関連改善:</b> IMP-002 / IMP-004 / IMP-007</div><p>社員、上長、部門長、経理間の受け渡しを、共通履歴、承認状態管理、並行処理統制で追跡する。</p></div><div class="pattern-card"><div class="pattern-head"><strong>重複入力</strong><span class="badge">あり</span></div><div><b>関連Task:</b> 申請内容とエビデンスを登録して申請 / 会計システムへ経費情報を登録</div><div><b>関連改善:</b> IMP-005</div><p>Power Appsで登録済みの経費情報を会計システムへ再入力する重複を、データ連携への置換で扱う。</p></div><div class="pattern-card"><div class="pattern-head"><strong>並行処理・完了待ち</strong><span class="badge">あり</span></div><div><b>関連Task:</b> 会計システムへ経費情報を登録 / エラー内容を確認して修正 / エビデンスを所定の保管先へ保管 / 振込処理</div><div><b>関連改善:</b> IMP-007 / IMP-008</div><p>会計登録とエビデンス保管の完了待ち、片側失敗、滞留、振込開始条件を明示的に統制する。</p></div></div></section>
+<div class="actions"><button id="copy" type="button">判断結果をコピー</button><button id="clear" type="button">判断をリセット</button><span id="copy-status" role="status" aria-live="polite"></span><span id="decision-progress" class="progress"></span><div id="external-link-status" role="status" aria-live="polite"></div><div id="decision-output-wrap"><label for="decision-output"><b>判断結果</b>（自動コピーできない場合はここからコピーしてください）</label><textarea id="decision-output" readonly></textarea></div></div>
+
+<article class="proposal" id="IMP-001" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-001</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>申請時の入力・エビデンス検証を標準化</h2></div>
+  <div class="decision-box"><label for="decision-IMP-001">判断</label><select id="decision-IMP-001" class="decision" data-id="IMP-001" aria-label="IMP-001 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-001" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: 申請内容とエビデンスを登録して申請 / 内容を修正して再申請</span><span>スコープ: Task</span></div>
+  <div class="badges"><span class="badge rec">簡素化</span><span class="badge rec">標準化</span><span class="badge rec">AI・ツール支援</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>高</span></div><div><b>実装工数</b><span>中</span></div><div><b>リスク</b><span>低</span></div><div><b>確度</b><span>高</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>初回申請と再申請に共通の入力ルール、必須項目、エビデンス要件、明確なエラーメッセージを定義し、送信前チェックを追加する。判断を要する経費妥当性は上長確認に残す。</p></section>
+  <section><h3>提案理由</h3><p>As-Isでは申請後に上長が内容とエビデンスの不備を確認し、不備時は差し戻しと再申請のループになる。申請時点で必須項目、形式、エビデンス有無を共通基準で確認すれば、後工程の手戻りを抑えられる。</p></section>
+  <section><h3>期待効果</h3><p>差し戻し率と再申請工数の低減が見込まれるが、現状件数と差し戻し率が未確認のため定量効果は未算定。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>候補あり</strong> / AI・ツール支援<p>形式・必須項目・エビデンス有無をシステムが検証し、社員が修正する。業務妥当性の判断は自動化しない。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="no-option"><strong>具体候補なし</strong><p><b>理由:</b> 現在のPower Appsアプリのデータ構造と実装方式が不明なため、具体機能を固定せず業務ルールの標準化を先行する。</p></div></section>
+  <section><h3>関連・依存する改善案</h3><ul class="plain-list"><li><b>組み合わせで効果向上</b>: IMP-002<br><span class="muted">差し戻し理由の標準化と併用すると、予防ルールの継続改善に使える。</span></li></ul></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>経費区分別の必須項目とエビデンス要件を定義する</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>現行の差し戻し理由別件数と差し戻し率はどの程度か</li><li>Power Appsアプリで実装可能な入力検証方式と改修権限は何か</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>申請内容とエビデンスを確認: 上長が申請内容とエビデンスの不備を確認する。</li><li>内容を修正して再申請: 不備時は社員が内容またはエビデンスを修正して再申請する。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<article class="proposal" id="IMP-002" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-002</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>差し戻し理由と再申請ルールを標準化</h2></div>
+  <div class="decision-box"><label for="decision-IMP-002">判断</label><select id="decision-IMP-002" class="decision" data-id="IMP-002" aria-label="IMP-002 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-002" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: 社員へ差し戻し / 社員へ差し戻し / 内容を修正して再申請</span><span>スコープ: プロセス横断</span></div>
+  <div class="badges"><span class="badge rec">簡素化</span><span class="badge rec">統合</span><span class="badge rec">標準化</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>中</span></div><div><b>実装工数</b><span>低</span></div><div><b>リスク</b><span>低</span></div><div><b>確度</b><span>高</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>差し戻し理由コード、具体的指摘、修正対象、再申請期限、再確認対象を共通様式にし、上長・部門長の差し戻し情報を一つの履歴として追跡する。再申請後も不備が残る場合の扱いは業務ルールとして別途決定する。</p></section>
+  <section><h3>提案理由</h3><p>上長と部門長の双方に社員への差し戻しがあり、出力は同じ「差し戻し指摘」だが、理由分類、必須記載、再申請時の確認範囲が定義されていない。</p></section>
+  <section><h3>期待効果</h3><p>社員と承認者間の往復時の情報欠落を減らし、再差し戻しの抑制と履歴追跡性の向上が見込まれる。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>候補あり</strong> / AI・ツール支援<p>定型選択肢と必須コメントで記録を支援する。差し戻し判断そのものは人が行う。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="no-option"><strong>具体候補なし</strong><p><b>理由:</b> 差し戻し分類と再申請ルールの業務決定が先であり、記録先の製品選定は独立して行えるため。</p></div></section>
+  <section><h3>関連・依存する改善案</h3><ul class="plain-list"><li><b>組み合わせで効果向上</b>: IMP-001 / IMP-004<br><span class="muted">申請時予防と承認状態管理を強化する。</span></li></ul></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>上長と部門長で共通利用できる差し戻し分類を合意する</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か</li><li>部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>社員へ差し戻し: 上長が不備内容を指摘して社員へ差し戻す。</li><li>社員へ差し戻し: 部門長が却下理由または修正指示を付して社員へ差し戻す。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<article class="proposal" id="IMP-003" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-003</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>5万円基準の承認要否判定を自動化</h2></div>
+  <div class="decision-box"><label for="decision-IMP-003">判断</label><select id="decision-IMP-003" class="decision" data-id="IMP-003" aria-label="IMP-003 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-003" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: 申請金額を確認</span><span>スコープ: Task</span></div>
+  <div class="badges"><span class="badge rec">廃止</span><span class="badge rec">標準化</span><span class="badge rec">自動化</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>中</span></div><div><b>実装工数</b><span>低</span></div><div><b>リスク</b><span>中</span></div><div><b>確度</b><span>高</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>申請金額をシステムで50000円と比較し、5万円以上は部門長審査へ、未満は承認完了合流へ自動ルーティングする。閾値変更権限と変更履歴を統制する。</p></section>
+  <section><h3>提案理由</h3><p>As-Isでは上長が申請金額を確認した直後、固定閾値50000円で部門長承認要否を判定する。構造化された申請金額に対する決定的な判定であり、手作業確認を廃止できる可能性が高い。</p></section>
+  <section><h3>期待効果</h3><p>上長の定型確認を削減し、ルーティングの一貫性を高める。月間件数が未確認のため総工数効果は未算定。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>候補あり</strong> / 完全自動化<p>固定閾値判定を自動化し、人は例外と閾値ガバナンスを担う。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="no-option"><strong>具体候補なし</strong><p><b>理由:</b> 現行アプリと後続承認基盤の接続方式が不明であり、業務上の自動判定を先に定義するため。</p></div></section>
+  <section><h3>関連・依存する改善案</h3><span class="muted">なし</span></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>申請金額が構造化された数値として取得できる</li><li>50000円の閾値が現行規程と一致することを確認する</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>閾値変更の承認者と変更履歴の保管要件は何か</li><li>税・外貨換算・複数明細の場合に判定対象とする金額は何か</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>申請金額を確認: 上長が申請金額を確認し部門長承認の要否を判定する。 後続Gatewayは50000円以上を部門長審査へ分岐する。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<article class="proposal" id="IMP-004" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-004</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>承認状態・通知・滞留を一元管理</h2></div>
+  <div class="decision-box"><label for="decision-IMP-004">判断</label><select id="decision-IMP-004" class="decision" data-id="IMP-004" aria-label="IMP-004 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-004" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: 申請内容とエビデンスを確認 / 申請を審査 / 社員へ差し戻し / 社員へ差し戻し</span><span>スコープ: プロセス横断</span></div>
+  <div class="badges"><span class="badge rec">標準化</span><span class="badge rec">自動化</span><span class="badge rec">維持</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>高</span></div><div><b>実装工数</b><span>中</span></div><div><b>リスク</b><span>中</span></div><div><b>確度</b><span>中</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>上長・部門長の人的判断は維持しつつ、依頼通知、担当、状態、判断日時、コメント、差し戻し履歴を一元管理する。期限超過時の通知・エスカレーションはSLA決定後に設定する。</p></section>
+  <section><h3>提案理由</h3><p>As-Isでは人による内容審査を維持する必要がある一方、承認依頼、結果、コメント、差し戻し、滞留の横断的な状態管理が明示されていない。担当間ハンドオフの見落としや追跡困難を防ぐ余地がある。</p></section>
+  <section><h3>期待効果</h3><p>承認状況の可視化、担当間ハンドオフの追跡、滞留把握の改善が見込まれる。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>候補あり</strong> / 部分自動化<p>依頼・通知・状態記録を自動化するが、審査と承認・却下判断は人が行う。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="implementation-grid"><div class="implementation-option">
+  <div class="implementation-head"><strong>Power Automate</strong><span class="badge fit fit-primary">推奨候補</span></div>
+  <div class="capability">承認アクションとクラウドフロー</div>
+  <p>承認依頼、応答待ち、結果通知、状態更新を制御する</p>
+  <div class="option-meta">確度: <b>中</b></div>
+  <div class="option-sub"><b>前提</b><ul class="plain-list"><li>利用可能ライセンスとDataverse環境条件を確認する</li><li>既存Power Appsとのトリガー・データ連携方式を確認する</li></ul></div>
+  <div class="option-sub"><b>根拠</b><div><a class="external-link" href="https://learn.microsoft.com/ja-jp/power-automate/modern-approvals" target="_blank" rel="noopener noreferrer" data-external-url="https://learn.microsoft.com/ja-jp/power-automate/modern-approvals">Power Automate での承認ワークフローを作成し、テストします <span aria-hidden="true">↗</span></a> <span class="source-id">(SRC-001)</span><br><a class="external-link" href="https://learn.microsoft.com/ja-jp/power-automate/get-started-approvals" target="_blank" rel="noopener noreferrer" data-external-url="https://learn.microsoft.com/ja-jp/power-automate/get-started-approvals">Power Automate の承認を始めましょう <span aria-hidden="true">↗</span></a> <span class="source-id">(SRC-002)</span></div></div>
+</div></div></section>
+  <section><h3>関連・依存する改善案</h3><ul class="plain-list"><li><b>組み合わせで効果向上</b>: IMP-002 / IMP-003<br><span class="muted">差し戻し標準化と自動ルーティングで状態の一貫性が高まる。</span></li></ul></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>承認者決定ルールと代理承認ルールを定義する</li><li>状態と監査ログの保持要件を定義する</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>SLAと期限超過時の通知・エスカレーション経路は何か</li><li>代理承認、承認取消、再割当の許容ルールは何か</li><li>Power Automate承認機能に必要なライセンスと環境権限を満たすか</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>申請内容とエビデンスを確認: 上長が申請内容とエビデンスを確認する。</li><li>申請を審査: 5万円以上は部門長が審査し承認または却下を判断する。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<article class="proposal" id="IMP-005" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-005</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>会計システムへの再入力を連携に置換</h2></div>
+  <div class="decision-box"><label for="decision-IMP-005">判断</label><select id="decision-IMP-005" class="decision" data-id="IMP-005" aria-label="IMP-005 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-005" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: 会計システムへ経費情報を登録 / エラー内容を確認して修正</span><span>スコープ: Task</span></div>
+  <div class="badges"><span class="badge rec">廃止</span><span class="badge rec">標準化</span><span class="badge rec">自動化</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>高</span></div><div><b>実装工数</b><span>高</span></div><div><b>リスク</b><span>高</span></div><div><b>確度</b><span>中</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>必要承認後の申請データを標準マッピングで会計システムへ連携し、手入力を廃止する。成功・失敗・失敗理由を申請単位で記録し、失敗時のみ経理担当者が原因確認、データ修正、再実行を行う。</p></section>
+  <section><h3>提案理由</h3><p>As-IsではPower Appsで登録済みの経費申請情報を経理担当者が会計システムへ再入力し、入力エラー時は修正して再登録する。重複入力とエラーループが明確に存在する。</p></section>
+  <section><h3>期待効果</h3><p>経理の転記工数と入力エラーを大きく削減できる可能性があるが、件数と現行エラー率は未確認。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>候補あり</strong> / 完全自動化<p>主処理は自動連携し、経理担当者は失敗・例外のみ処理する。会計システムの連携可否で実現性が変わる。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="no-option"><strong>具体候補なし</strong><p><b>理由:</b> 会計システム名、API・ファイル連携仕様、認証、ライセンスが未確認のため具体製品候補を示せない。</p></div></section>
+  <section><h3>関連・依存する改善案</h3><span class="muted">なし</span></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>会計システムの連携インターフェースが利用可能</li><li>申請項目と会計項目のマッピングおよび勘定科目ルールを確定する</li><li>重複登録防止キーを定義する</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>会計システムが提供するAPIまたは入出力ファイル仕様は何か</li><li>連携失敗時の再実行上限と経理担当者への通知方法は何か</li><li>自動登録後の取消・訂正処理はどの経路で行うか</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>会計システムへ経費情報を登録: 経理担当者が経費申請情報を会計システムへ入力して登録する。</li><li>エラー内容を確認して修正: 入力エラー時は経理担当者が内容を修正して登録へ戻る。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<article class="proposal" id="IMP-006" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-006</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>エビデンス保管を自動化し申請と関連付け</h2></div>
+  <div class="decision-box"><label for="decision-IMP-006">判断</label><select id="decision-IMP-006" class="decision" data-id="IMP-006" aria-label="IMP-006 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-006" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: エビデンスを所定の保管先へ保管</span><span>スコープ: Task</span></div>
+  <div class="badges"><span class="badge rec">標準化</span><span class="badge rec">自動化</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>中</span></div><div><b>実装工数</b><span>中</span></div><div><b>リスク</b><span>中</span></div><div><b>確度</b><span>中</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>必要承認後、エビデンスを所定の保管先へ自動保存し、申請ID、保存先、保存結果、版を記録する。失敗・重複・欠損時のみ経理担当者が是正して再実行する。</p></section>
+  <section><h3>提案理由</h3><p>エビデンスは申請時にPower Appsへ登録済みだが、承認後に経理担当者が別途所定の保管先へ保管している。手作業移送と申請との紐付け不備を削減できる。</p></section>
+  <section><h3>期待効果</h3><p>保管作業の削減と追跡性向上が見込まれる。保存件数と保管要件が未確認のため定量効果は未算定。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>候補あり</strong> / 完全自動化<p>主処理は自動保存し、経理担当者は保存失敗や例外を処理する。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="implementation-grid"><div class="implementation-option">
+  <div class="implementation-head"><strong>Power Automate と SharePoint</strong><span class="badge fit fit-alternative">検討候補</span></div>
+  <div class="capability">SharePointコネクタによるライブラリへのファイル操作と変更トリガー</div>
+  <p>エビデンスを規定ライブラリへ保存し保存結果を追跡する</p>
+  <div class="option-meta">確度: <b>中</b></div>
+  <div class="option-sub"><b>前提</b><ul class="plain-list"><li>保管先がSharePointで要件を満たす</li><li>命名、メタデータ、アクセス権、保持要件を定義する</li></ul></div>
+  <div class="option-sub"><b>根拠</b><div><a class="external-link" href="https://learn.microsoft.com/ja-jp/sharepoint/dev/business-apps/power-automate/sharepoint-connector-actions-triggers" target="_blank" rel="noopener noreferrer" data-external-url="https://learn.microsoft.com/ja-jp/sharepoint/dev/business-apps/power-automate/sharepoint-connector-actions-triggers">Power Automate 用 Microsoft SharePoint コネクタ <span aria-hidden="true">↗</span></a> <span class="source-id">(SRC-003)</span></div></div>
+</div></div></section>
+  <section><h3>関連・依存する改善案</h3><span class="muted">なし</span></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>正式な保管先、命名規則、メタデータ、アクセス権、保持期間を定義する</li><li>申請IDとエビデンスを一意に関連付ける</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>所定の保管先と法令・監査上の保持要件は何か</li><li>元ファイル、変換後ファイル、版のどれを保持対象とするか</li><li>保存失敗時の再実行と手動是正の責任者は誰か</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>申請内容とエビデンスを登録して申請: 社員が申請時にエビデンスをPower Appsへ登録する。</li><li>エビデンスを所定の保管先へ保管: 経理担当者がエビデンスを所定の保管先へ保管する。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<article class="proposal" id="IMP-007" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-007</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>並行処理の完了・失敗・滞留を統制</h2></div>
+  <div class="decision-box"><label for="decision-IMP-007">判断</label><select id="decision-IMP-007" class="decision" data-id="IMP-007" aria-label="IMP-007 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-007" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: 会計システムへ経費情報を登録 / エラー内容を確認して修正 / エビデンスを所定の保管先へ保管 / 振込処理</span><span>スコープ: プロセス横断</span></div>
+  <div class="badges"><span class="badge rec">標準化</span><span class="badge rec">自動化</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>高</span></div><div><b>実装工数</b><span>中</span></div><div><b>リスク</b><span>中</span></div><div><b>確度</b><span>高</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>申請単位で会計登録とエビデンス保管の状態を管理し、両方成功時のみ振込可能とする。どちらかが失敗または期限超過の場合は担当者へ通知し、是正後に当該処理を再実行する。振込への迂回は許可しない。</p></section>
+  <section><h3>提案理由</h3><p>As-Isでは会計登録とエビデンス保管を並行実行し、両方の完了後に振込処理へ進む。一方、保管側の失敗経路、片側滞留、期限超過時の扱いが明示されていない。</p></section>
+  <section><h3>期待効果</h3><p>振込前提の欠落、片側未完了の見逃し、滞留の不可視化を防ぎ、統制を強化する。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>候補あり</strong> / 部分自動化<p>状態判定と通知は自動化候補。例外原因の是正は経理担当者が行う。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="no-option"><strong>具体候補なし</strong><p><b>理由:</b> IMP-005とIMP-006の採否にかかわらず状態統制は成立するが、具体基盤は現在のデータストアと監視方式が未確認のため固定しない。</p></div></section>
+  <section><h3>関連・依存する改善案</h3><span class="muted">なし</span></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>会計登録と保管の成功・失敗状態を申請ID単位で記録できる</li><li>振込実行前に両状態を検証する統制点を設ける</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>並行処理の期限超過判定に用いるSLAは何か</li><li>会計登録失敗と保管失敗の例外責任者は同一か</li><li>片側が長期停止した場合の申請取消または手動振込の許可ルールは何か</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>会計システムへ経費情報を登録: 会計登録はエビデンス保管と並行開始され、入力エラー時は修正ループへ入る。</li><li>エビデンスを所定の保管先へ保管: エビデンス保管は会計登録と並行実行される。</li><li>振込処理: 並行する両処理の完了後に振込処理を行う。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<article class="proposal" id="IMP-008" data-decision="undecided">
+  <div class="proposal-head"><div><div class="id-row"><span class="proposal-id">IMP-008</span><span class="decision-state" aria-live="polite">要判断</span></div><h2>振込入力と実行結果の記録を標準化</h2></div>
+  <div class="decision-box"><label for="decision-IMP-008">判断</label><select id="decision-IMP-008" class="decision" data-id="IMP-008" aria-label="IMP-008 の判断"><option value="undecided">未判断（要判断）</option><option value="approved">採用</option><option value="conditional_approved">条件付き採用</option><option value="hold">保留</option><option value="rejected">見送り</option></select>
+  <details class="decision-note-wrap"><summary>判断メモ（任意）</summary><div class="decision-note-hint" hidden>条件付き採用には採用条件の入力が必要です。</div><textarea class="decision-note" data-id="IMP-008" rows="2" placeholder="判断理由などを必要に応じて記入してください"></textarea></details></div></div>
+  <div class="meta"><span>対象: 振込処理</span><span>スコープ: Task</span></div>
+  <div class="badges"><span class="badge rec">標準化</span><span class="badge rec">簡素化</span></div>
+  <div class="grid4">
+    <div><b>効果</b><span>中</span></div><div><b>実装工数</b><span>中</span></div><div><b>リスク</b><span>中</span></div><div><b>確度</b><span>中</span></div>
+  </div>
+  <section><h3>提案内容</h3><p>振込対象、金額、口座参照、支払日、申請IDを標準入力とし、振込受付番号、実行日時、成否、失敗理由を結果として記録する。失敗時の再実行・取消・照合手順は業務ルールとして定義する。</p></section>
+  <section><h3>提案理由</h3><p>As-Isの振込処理は入力が経費申請、出力も経費申請のみで、振込対象情報、実行結果、失敗時の扱い、照合記録が明示されていない。</p></section>
+  <section><h3>期待効果</h3><p>振込結果の追跡と後続照合を容易にし、完了判定の曖昧さを減らす。</p></section>
+  <section><h3>自動化・支援評価</h3><strong>未確定</strong><p>銀行連携方式と現行振込手段が不明なため、自動化可否は判断しない。</p></section>
+  <section><h3>想定・推奨する機能 / サービス</h3><div class="no-option"><strong>具体候補なし</strong><p><b>理由:</b> 利用する銀行サービス、振込チャネル、API・ファイル仕様が未確認のため。</p></div></section>
+  <section><h3>関連・依存する改善案</h3><ul class="plain-list"><li><b>組み合わせで効果向上</b>: IMP-007<br><span class="muted">並行完了統制と組み合わせると、振込開始条件と実行結果を一貫して追跡できる。</span></li></ul></section>
+  <div class="twocol"><section><h3>前提条件</h3><ul class="plain-list"><li>振込に必要な入力情報と機微情報の取扱基準を定義する</li></ul></section><section><h3>未確認事項</h3><ul class="plain-list"><li>振込処理で利用するシステムまたは銀行チャネルは何か</li><li>振込失敗時の再実行、取消、照合、承認ルールは何か</li><li>振込結果と会計登録結果の照合責任者は誰か</li></ul></section></div>
+  <section><h3>As-Is上の根拠</h3><ul class="plain-list"><li>振込処理: 会計登録とエビデンス保管の完了後に経理担当者が振込処理を行う。</li></ul></section>
+  <section><h3>外部根拠</h3><div><span class="muted">なし</span></div></section>
+</article>
+<section class="openq"><h2>分析全体の未確認事項</h2><ul class="plain-list"><li>改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。</li><li>規程、監査、保持、権限分離の要件が未確認である。</li></ul></section>
+<section class="sources"><h2>調査ソース</h2><ul><li><b>SRC-001</b> <a class="external-link" href="https://learn.microsoft.com/ja-jp/power-automate/modern-approvals" target="_blank" rel="noopener noreferrer" data-external-url="https://learn.microsoft.com/ja-jp/power-automate/modern-approvals">Power Automate での承認ワークフローを作成し、テストします <span aria-hidden="true">↗</span></a><br><span class="muted">Microsoft Learn — Power Automateで承認要求、承認者応答、結果通知、状態更新を構成できることを確認。</span></li><li><b>SRC-002</b> <a class="external-link" href="https://learn.microsoft.com/ja-jp/power-automate/get-started-approvals" target="_blank" rel="noopener noreferrer" data-external-url="https://learn.microsoft.com/ja-jp/power-automate/get-started-approvals">Power Automate の承認を始めましょう <span aria-hidden="true">↗</span></a><br><span class="muted">Microsoft Learn — 経費精算を含む承認ユースケース、順次承認、ライセンスおよびDataverse前提を確認。</span></li><li><b>SRC-003</b> <a class="external-link" href="https://learn.microsoft.com/ja-jp/sharepoint/dev/business-apps/power-automate/sharepoint-connector-actions-triggers" target="_blank" rel="noopener noreferrer" data-external-url="https://learn.microsoft.com/ja-jp/sharepoint/dev/business-apps/power-automate/sharepoint-connector-actions-triggers">Power Automate 用 Microsoft SharePoint コネクタ <span aria-hidden="true">↗</span></a><br><span class="muted">Microsoft Learn — SharePointライブラリのファイル作成・変更を起点としたフローとファイル操作の実現可能性を確認。</span></li></ul></section>
+</main>
+<script type="application/json" id="proposal-data">[{"id": "IMP-001", "title": "申請時の入力・エビデンス検証を標準化"}, {"id": "IMP-002", "title": "差し戻し理由と再申請ルールを標準化"}, {"id": "IMP-003", "title": "5万円基準の承認要否判定を自動化"}, {"id": "IMP-004", "title": "承認状態・通知・滞留を一元管理"}, {"id": "IMP-005", "title": "会計システムへの再入力を連携に置換"}, {"id": "IMP-006", "title": "エビデンス保管を自動化し申請と関連付け"}, {"id": "IMP-007", "title": "並行処理の完了・失敗・滞留を統制"}, {"id": "IMP-008", "title": "振込入力と実行結果の記録を標準化"}]</script>
+<script>
+(()=>{
+const proposals=JSON.parse(document.getElementById('proposal-data').textContent);
+const labels={approved:'採用',conditional_approved:'条件付き採用',hold:'保留',rejected:'見送り',undecided:'未判断'};
+const states={approved:'採用',conditional_approved:'条件付き',hold:'保留',rejected:'見送り',undecided:'要判断'};
+const status=document.getElementById('copy-status');
+const outputWrap=document.getElementById('decision-output-wrap');
+const output=document.getElementById('decision-output');
+const progress=document.getElementById('decision-progress');
+const externalLinkStatus=document.getElementById('external-link-status');
+function decisionFor(id){
+  const select=document.querySelector(`select[data-id="${id}"]`);
+  const note=document.querySelector(`textarea.decision-note[data-id="${id}"]`);
+  return {value:select?.value||'undecided',note:(note?.value||'').trim()};
+}
+const analysisId='bpr-a-72939496e232d2e0';
+function lines(){return `分析ID: ${analysisId}
+`+proposals.map(p=>{const d=decisionFor(p.id);const suffix=d.note?` | メモ: ${d.note}`:'';return `${p.id}: ${labels[d.value]}${suffix} - ${p.title}`;}).join('\n');}
+function updateDecisionState(card,value,noteValue){
+  const pill=card.querySelector('.decision-state');
+  if(!pill)return;
+  if(value==='conditional_approved'&&!String(noteValue||'').trim())pill.textContent='条件入力待ち';
+  else pill.textContent=states[value]||value;
+}
+function updateCard(select){
+  const id=select.dataset.id; const card=document.getElementById(id); if(!card)return;
+  const value=select.value; card.dataset.decision=value;
+  const details=card.querySelector('.decision-note-wrap'); const note=card.querySelector('.decision-note'); const hint=card.querySelector('.decision-note-hint'); const summaryEl=details?.querySelector('summary');
+  if(value==='conditional_approved'){
+    if(details)details.open=true;
+    if(summaryEl)summaryEl.textContent='採用条件（必須）';
+    if(hint)hint.hidden=false;
+    if(note){note.classList.add('required');note.setAttribute('aria-required','true');note.placeholder='この改善案を採用する条件を入力してください（必須）';}
+  } else {
+    if(summaryEl)summaryEl.textContent='判断メモ（任意）';
+    if(hint)hint.hidden=true;
+    if(note){note.classList.remove('required');note.removeAttribute('aria-required');note.placeholder='判断理由などを必要に応じて記入してください';}
+  }
+  updateDecisionState(card,value,note?.value||'');
+  updateProgress();
+}
+function updateProgress(){
+  const values=proposals.map(p=>decisionFor(p.id).value); const undecided=values.filter(v=>v==='undecided').length;
+  progress.textContent=undecided?`要判断: ${undecided}件 / ${proposals.length}件`:`全${proposals.length}件を判断済み`;
+}
+function validateConditional(){
+  const missing=[];
+  proposals.forEach(p=>{const d=decisionFor(p.id);if(d.value==='conditional_approved'&&!d.note)missing.push(p.id);});
+  if(missing.length){
+    status.textContent=`条件付き採用の条件が未入力です: ${missing.join(', ')}`;
+    const card=document.getElementById(missing[0]);
+    const details=card?.querySelector('.decision-note-wrap'); if(details)details.open=true;
+    card?.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(()=>card?.querySelector('.decision-note')?.focus(),220);
+    return false;
+  }
+  return true;
+}
+async function tryClipboard(text){
+  if(navigator.clipboard&&window.isSecureContext){try{await navigator.clipboard.writeText(text);return true;}catch(e){}}
+  const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='absolute';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,ta.value.length);
+  let ok=false;try{ok=document.execCommand('copy');}catch(e){ok=false;}document.body.removeChild(ta);return ok;
+}
+document.querySelectorAll('.decision').forEach(s=>{s.addEventListener('change',()=>{updateCard(s);if(s.value==='conditional_approved')setTimeout(()=>document.querySelector(`textarea.decision-note[data-id="${s.dataset.id}"]`)?.focus(),0);});updateCard(s);});
+document.querySelectorAll('.decision-note').forEach(note=>{note.addEventListener('input',()=>{const card=document.getElementById(note.dataset.id);const select=document.querySelector(`select.decision[data-id="${note.dataset.id}"]`);if(card&&select){updateDecisionState(card,select.value,note.value);}});});
+document.querySelectorAll('a.external-link').forEach(a=>{a.addEventListener('click',async(e)=>{
+  e.preventDefault();
+  const url=a.dataset.externalUrl||a.href;
+  let opened=null;
+  try{opened=window.open(url,'_blank');if(opened){try{opened.opener=null;}catch(_e){}}}catch(_e){opened=null;}
+  if(opened){externalLinkStatus.classList.remove('visible');externalLinkStatus.textContent='';return;}
+  const copied=await tryClipboard(url);
+  externalLinkStatus.textContent=copied?'この表示環境では新しいタブを開けませんでした。URLをクリップボードへコピーしました。':'この表示環境では新しいタブを開けませんでした。リンクを右クリックしてURLをコピーしてください。';
+  externalLinkStatus.classList.add('visible');
+});});
+document.getElementById('copy').addEventListener('click',async()=>{
+  if(!validateConditional())return;
+  const text=lines();output.value=text;
+  const ok=await tryClipboard(text);
+  if(ok){status.textContent='判断結果をコピーしました';outputWrap.classList.remove('visible');}
+  else{status.textContent='自動コピーできませんでした。下の判断結果を選択してコピーしてください。';outputWrap.classList.add('visible');output.focus();output.select();}
+});
+document.getElementById('clear').addEventListener('click',()=>{document.querySelectorAll('.decision').forEach(s=>{s.value='undecided';updateCard(s);});document.querySelectorAll('.decision-note').forEach(x=>x.value='');status.textContent='';externalLinkStatus.textContent='';externalLinkStatus.classList.remove('visible');output.value='';outputWrap.classList.remove('visible');});
+updateProgress();
+})();
+</script></body></html>

@@ -1,0 +1,27 @@
+decision_version: '1.3'
+source_analysis_version: '1.5'
+source_analysis_id: bpr-a-72939496e232d2e0
+source_process:
+  id: expense_reimbursement_as_is
+  version: '1.0'
+decisions:
+- improvement_id: IMP-001
+  decision: approved
+- improvement_id: IMP-002
+  decision: approved
+- improvement_id: IMP-003
+  decision: approved
+- improvement_id: IMP-004
+  decision: approved
+- improvement_id: IMP-005
+  decision: approved
+- improvement_id: IMP-006
+  decision: approved
+- improvement_id: IMP-007
+  decision: approved
+- improvement_id: IMP-008
+  decision: approved
+business_rule_resolutions:
+- question: 税・外貨換算・複数明細の場合に判定対象とする金額は何か
+  source: IMP-003
+  resolution: 5万円以上の判定には、申請単位の精算予定総額（税込・日本円換算後）を使用する。複数明細は合算し、外貨明細は組織で定める換算ルールにより日本円へ換算する。

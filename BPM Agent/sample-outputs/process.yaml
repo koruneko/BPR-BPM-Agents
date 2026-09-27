@@ -1,0 +1,284 @@
+schema_version: '1.0'
+process:
+  id: expense_reimbursement_as_is
+  name: 経費精算業務（As-Is）
+  description: 社員による経費申請から承認、経理処理、振込完了までの現行業務プロセス
+  version: '1.0'
+  scope:
+    start: 社員が経費申請を開始する
+    end: 経理担当者が振込処理を完了する
+participants:
+- id: employee
+  name: 社員
+  type: role
+- id: manager
+  name: 直属の上長
+  type: role
+- id: department_head
+  name: 部門長
+  type: role
+- id: accounting
+  name: 経理担当者
+  type: role
+nodes:
+- id: start
+  type: start
+  name: 経費申請を開始
+  participant: employee
+- id: submit_expense
+  type: task
+  task_type: user
+  name: 申請内容とエビデンスを登録して申請
+  participant: employee
+  description: 社員がPower Appsの経費精算アプリに申請内容と領収書などのエビデンスを登録し、経費申請を行う。
+  system: Power Apps 経費精算アプリ
+  inputs:
+  - 経費情報
+  - エビデンス
+  outputs:
+  - 経費申請
+  - エビデンス
+- id: manager_review
+  type: task
+  task_type: generic
+  name: 申請内容とエビデンスを確認
+  participant: manager
+  description: 直属の上長が経費申請の内容とエビデンスを確認し、不備の有無を判断する。
+  inputs:
+  - 経費申請
+  - エビデンス
+  outputs:
+  - 経費申請
+- id: defect_gateway
+  type: gateway_exclusive
+  name: 内容に不備があるか
+  participant: manager
+- id: manager_return
+  type: task
+  task_type: generic
+  name: 社員へ差し戻し
+  participant: manager
+  description: 直属の上長が不備の内容を指摘して経費申請を社員へ差し戻す。
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+  - 差し戻し指摘
+- id: revise_resubmit
+  type: task
+  task_type: user
+  name: 内容を修正して再申請
+  participant: employee
+  description: 社員が差し戻し指摘に基づいて申請内容またはエビデンスを修正し、Power Appsから再申請する。
+  system: Power Apps 経費精算アプリ
+  inputs:
+  - 経費申請
+  - エビデンス
+  - 差し戻し指摘
+  outputs:
+  - 経費申請
+  - エビデンス
+- id: check_amount
+  type: task
+  task_type: generic
+  name: 申請金額を確認
+  participant: manager
+  description: 直属の上長が申請金額を確認し、部門長承認の要否を判定する。
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+- id: amount_gateway
+  type: gateway_exclusive
+  name: 申請金額が5万円以上か
+  participant: manager
+- id: department_head_review
+  type: task
+  task_type: generic
+  name: 申請を審査
+  participant: department_head
+  description: 部門長が5万円以上の経費申請を審査し、承認または却下を判断する。
+  inputs:
+  - 経費申請
+  - エビデンス
+  outputs:
+  - 経費申請
+- id: approval_gateway
+  type: gateway_exclusive
+  name: 部門長の審査結果
+  participant: department_head
+- id: department_head_return
+  type: task
+  task_type: generic
+  name: 社員へ差し戻し
+  participant: department_head
+  description: 部門長が却下理由または修正指示を付して経費申請を社員へ差し戻す。
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+  - 差し戻し指摘
+- id: approval_merge
+  type: gateway_exclusive
+  name: 必要な承認を完了
+  participant: accounting
+- id: parallel_split
+  type: gateway_parallel
+  name: 経理処理を並行開始
+  participant: accounting
+- id: register_accounting
+  type: task
+  task_type: user
+  name: 会計システムへ経費情報を登録
+  participant: accounting
+  description: 経理担当者が経費申請の情報を会計システムへ入力して登録する。登録結果は後続で入力エラーの有無を判定する。
+  system: 会計システム
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+  - 入力エラー情報
+- id: registration_error_gateway
+  type: gateway_exclusive
+  name: 入力エラーが発生したか
+  participant: accounting
+- id: correct_registration
+  type: task
+  task_type: user
+  name: エラー内容を確認して修正
+  participant: accounting
+  description: 経理担当者が入力エラー情報を確認し、登録内容を修正する。
+  system: 会計システム
+  inputs:
+  - 経費申請
+  - 入力エラー情報
+  outputs:
+  - 経費申請
+- id: store_evidence
+  type: task
+  task_type: generic
+  name: エビデンスを所定の保管先へ保管
+  participant: accounting
+  description: 経理担当者が領収書などのエビデンスを所定の保管先へ保管する。
+  inputs:
+  - 経費申請
+  - エビデンス
+  outputs:
+  - エビデンス
+- id: parallel_join
+  type: gateway_parallel
+  name: 登録と保管の完了を待ち合わせ
+  participant: accounting
+- id: bank_transfer
+  type: task
+  task_type: generic
+  name: 振込処理
+  participant: accounting
+  description: 会計システムへの登録とエビデンス保管の両方が完了した後、経理担当者が振込処理を行う。
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+- id: end
+  type: end
+  name: 経費精算を完了
+  participant: accounting
+edges:
+- id: e01
+  from: start
+  to: submit_expense
+- id: e02
+  from: submit_expense
+  to: manager_review
+- id: e03
+  from: manager_review
+  to: defect_gateway
+- id: e04
+  from: defect_gateway
+  to: manager_return
+  name: 不備あり
+  condition: 申請内容またはエビデンスに不備がある
+- id: e05
+  from: defect_gateway
+  to: check_amount
+  name: 不備なし
+  default: true
+- id: e06
+  from: manager_return
+  to: revise_resubmit
+- id: e07
+  from: revise_resubmit
+  to: manager_review
+- id: e08
+  from: check_amount
+  to: amount_gateway
+- id: e09
+  from: amount_gateway
+  to: department_head_review
+  name: 5万円以上
+  condition: 申請金額が50000円以上
+- id: e10
+  from: amount_gateway
+  to: approval_merge
+  name: 5万円未満
+  default: true
+- id: e11
+  from: department_head_review
+  to: approval_gateway
+- id: e12
+  from: approval_gateway
+  to: approval_merge
+  name: 承認
+  condition: 部門長が承認
+- id: e13
+  from: approval_gateway
+  to: department_head_return
+  name: 却下
+  default: true
+- id: e14
+  from: department_head_return
+  to: revise_resubmit
+- id: e15
+  from: approval_merge
+  to: parallel_split
+- id: e16
+  from: parallel_split
+  to: register_accounting
+- id: e17
+  from: parallel_split
+  to: store_evidence
+- id: e18
+  from: register_accounting
+  to: registration_error_gateway
+- id: e19
+  from: registration_error_gateway
+  to: correct_registration
+  name: 入力エラーあり
+  condition: 会計システム登録時に入力エラーが発生
+- id: e20
+  from: registration_error_gateway
+  to: parallel_join
+  name: 入力エラーなし
+  default: true
+- id: e21
+  from: correct_registration
+  to: register_accounting
+- id: e22
+  from: store_evidence
+  to: parallel_join
+- id: e23
+  from: parallel_join
+  to: bank_transfer
+- id: e24
+  from: bank_transfer
+  to: end
+metadata:
+  assumptions: []
+  open_questions:
+  - 各作業の標準所要時間
+  - 月間申請件数と繁閑差
+  - プロセスオーナー
+  - SLA
+  inferences:
+  - 修正再申請は、初回申請と同じPower Apps経費精算アプリを利用するものとしてモデル化した。
+  - 会計システム登録の入力エラー情報は、経理担当者が修正時に参照する業務情報としてモデル化した。

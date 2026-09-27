@@ -1,0 +1,817 @@
+schema_version: '1.0'
+process:
+  id: expense_reimbursement_to_be
+  name: 経費精算業務（To-Be）
+  description: 申請時検証、承認ルーティング、会計連携、エビデンス保管、並行完了統制を反映した経費精算業務
+  version: '2.0'
+  scope:
+    start: 社員が経費申請を開始する
+    end: 経理担当者が振込処理を完了する
+participants:
+- id: employee
+  name: 社員
+  type: role
+- id: manager
+  name: 直属の上長
+  type: role
+- id: department_head
+  name: 部門長
+  type: role
+- id: accounting
+  name: 経理担当者
+  type: role
+- id: automation_system
+  name: 自動処理
+  type: system
+nodes:
+- id: start
+  type: start
+  name: 経費申請を開始
+  participant: employee
+- id: submit_expense
+  type: task
+  task_type: user
+  name: 申請内容とエビデンスを登録して申請
+  participant: employee
+  description: 社員が申請内容とエビデンスを登録する。共通の必須項目、形式、エビデンス要件を送信前に検証し、不備がなければ申請する。
+  system: Power Apps 経費精算アプリ
+  inputs:
+  - 経費情報
+  - エビデンス
+  outputs:
+  - 経費申請
+  - エビデンス
+  automation:
+    candidate: true
+    notes: 入力形式、必須項目、エビデンス有無をシステムが検証し、業務妥当性は人が判断する。
+- id: manager_review
+  type: task
+  task_type: generic
+  name: 申請内容とエビデンスを確認
+  participant: manager
+  description: 直属の上長が申請内容とエビデンスを審査し、判断結果、日時、コメントを一元管理する。
+  inputs:
+  - 経費申請
+  - エビデンス
+  outputs:
+  - 経費申請
+- id: defect_gateway
+  type: gateway_exclusive
+  name: 内容に不備があるか
+  participant: manager
+- id: manager_return
+  type: task
+  task_type: generic
+  name: 社員へ差し戻し
+  participant: manager
+  description: 直属の上長が共通の差し戻し分類、具体的指摘、修正対象、再確認対象を記録して社員へ差し戻す。
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+  - 差し戻し指摘
+- id: revise_resubmit
+  type: task
+  task_type: user
+  name: 内容を修正して再申請
+  participant: employee
+  description: 社員が標準化された差し戻し理由、具体的指摘、修正対象に基づいて内容またはエビデンスを修正し、送信前検証後に再申請する。
+  system: Power Apps 経費精算アプリ
+  inputs:
+  - 経費申請
+  - エビデンス
+  - 差し戻し指摘
+  outputs:
+  - 経費申請
+  - エビデンス
+- id: amount_gateway
+  type: gateway_exclusive
+  name: 精算予定総額が5万円以上か
+  participant: automation_system
+- id: department_head_review
+  type: task
+  task_type: generic
+  name: 申請を審査
+  participant: department_head
+  description: 部門長が5万円以上の経費申請を審査し、判断結果、日時、コメントを一元管理する。
+  inputs:
+  - 経費申請
+  - エビデンス
+  outputs:
+  - 経費申請
+- id: approval_gateway
+  type: gateway_exclusive
+  name: 部門長の審査結果
+  participant: department_head
+- id: department_head_return
+  type: task
+  task_type: generic
+  name: 社員へ差し戻し
+  participant: department_head
+  description: 部門長が共通の差し戻し分類、具体的指摘、修正対象、再確認対象を記録して社員へ差し戻す。
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+  - 差し戻し指摘
+- id: approval_merge
+  type: gateway_exclusive
+  name: 必要な承認を完了
+  participant: accounting
+- id: parallel_split
+  type: gateway_parallel
+  name: 経理処理を並行開始
+  participant: automation_system
+- id: register_accounting
+  type: task
+  task_type: service
+  name: 会計システムへ経費情報を連携
+  participant: automation_system
+  description: 必要承認後の経費申請を標準マッピングで会計システムへ自動連携し、成功・失敗・失敗理由を申請単位で記録する。
+  system: 会計システム
+  inputs:
+  - 経費申請
+  outputs:
+  - 経費申請
+  - 会計登録結果
+  automation:
+    candidate: true
+    notes: 正常系の会計登録を自動実行し、失敗・期限超過時だけ経理担当者が対応する。
+    exception_owner: accounting
+- id: registration_error_gateway
+  type: gateway_exclusive
+  name: 会計連携が成功したか
+  participant: automation_system
+- id: correct_registration
+  type: task
+  task_type: user
+  name: 会計連携の例外を是正
+  participant: accounting
+  description: 経理担当者が会計連携の失敗理由または期限超過を確認し、原因を是正して再実行する。
+  system: 会計システム
+  inputs:
+  - 経費申請
+  - 会計登録結果
+  outputs:
+  - 経費申請
+- id: store_evidence
+  type: task
+  task_type: service
+  name: エビデンスを自動保管
+  participant: automation_system
+  description: 必要承認後にエビデンスを所定の保管先へ自動保存し、申請ID、保存先、保存結果、版を記録する。
+  inputs:
+  - 経費申請
+  - エビデンス
+  outputs:
+  - エビデンス
+  - エビデンス保管結果
+  system: 所定のエビデンス保管先
+  automation:
+    candidate: true
+    notes: 正常系の保管を自動実行し、失敗・期限超過時だけ経理担当者が対応する。
+    exception_owner: accounting
+- id: evidence_result_gateway
+  type: gateway_exclusive
+  name: エビデンス保管が成功したか
+  participant: automation_system
+- id: correct_evidence_storage
+  type: task
+  task_type: user
+  name: エビデンス保管の例外を是正
+  participant: accounting
+  description: 経理担当者がエビデンス保管の失敗理由または期限超過を確認し、原因を是正して再実行する。
+  system: 所定のエビデンス保管先
+  inputs:
+  - 経費申請
+  - エビデンス
+  - エビデンス保管結果
+  outputs:
+  - 経費申請
+  - エビデンス
+- id: parallel_join
+  type: gateway_parallel
+  name: 登録と保管の完了を待ち合わせ
+  participant: automation_system
+- id: bank_transfer
+  type: task
+  task_type: generic
+  name: 振込を実行して結果を記録
+  participant: accounting
+  description: 振込対象、金額、口座参照、支払日、申請IDを使用して振込を実行し、受付番号、実行日時、成否、失敗理由を記録する。
+  inputs:
+  - 経費申請
+  - 会計登録結果
+  - エビデンス保管結果
+  outputs:
+  - 経費申請
+  - 振込結果
+- id: transfer_result_gateway
+  type: gateway_exclusive
+  name: 振込が成功したか
+  participant: accounting
+- id: resolve_transfer_failure
+  type: task
+  task_type: generic
+  name: 振込失敗を是正
+  participant: accounting
+  description: 経理担当者が振込失敗理由を確認し、定められた再実行、取消、照合ルールに従って原因を是正する。
+  inputs:
+  - 経費申請
+  - 振込結果
+  outputs:
+  - 経費申請
+- id: end
+  type: end
+  name: 経費精算を完了
+  participant: accounting
+edges:
+- id: e01
+  from: start
+  to: submit_expense
+- id: e02
+  from: submit_expense
+  to: manager_review
+- id: e03
+  from: manager_review
+  to: defect_gateway
+- id: e04
+  from: defect_gateway
+  to: manager_return
+  name: 不備あり
+  condition: 申請内容またはエビデンスに不備がある
+- id: e05
+  from: defect_gateway
+  to: amount_gateway
+  name: 不備なし
+  default: true
+- id: e06
+  from: manager_return
+  to: revise_resubmit
+- id: e07
+  from: revise_resubmit
+  to: manager_review
+- id: e09
+  from: amount_gateway
+  to: department_head_review
+  name: 5万円以上
+  condition: 申請単位の精算予定総額（税込・日本円換算後）が50000円以上
+- id: e10
+  from: amount_gateway
+  to: approval_merge
+  name: 5万円未満
+  default: true
+- id: e11
+  from: department_head_review
+  to: approval_gateway
+- id: e12
+  from: approval_gateway
+  to: approval_merge
+  name: 承認
+  condition: 部門長が承認
+- id: e13
+  from: approval_gateway
+  to: department_head_return
+  name: 差し戻し
+  default: true
+- id: e14
+  from: department_head_return
+  to: revise_resubmit
+- id: e15
+  from: approval_merge
+  to: parallel_split
+- id: e16
+  from: parallel_split
+  to: register_accounting
+- id: e17
+  from: parallel_split
+  to: store_evidence
+- id: e18
+  from: register_accounting
+  to: registration_error_gateway
+- id: e19
+  from: registration_error_gateway
+  to: parallel_join
+  name: 成功
+  condition: 会計連携が成功
+- id: e20
+  from: registration_error_gateway
+  to: correct_registration
+  name: 失敗・期限超過
+  default: true
+- id: e21
+  from: correct_registration
+  to: register_accounting
+- id: e22
+  from: store_evidence
+  to: evidence_result_gateway
+- id: e25
+  from: evidence_result_gateway
+  to: parallel_join
+  name: 成功
+  condition: エビデンス保管が成功
+- id: e26
+  from: evidence_result_gateway
+  to: correct_evidence_storage
+  name: 失敗・期限超過
+  default: true
+- id: e27
+  from: correct_evidence_storage
+  to: store_evidence
+- id: e23
+  from: parallel_join
+  to: bank_transfer
+- id: e28
+  from: bank_transfer
+  to: transfer_result_gateway
+- id: e29
+  from: transfer_result_gateway
+  to: end
+  name: 成功
+  condition: 振込が成功
+- id: e30
+  from: transfer_result_gateway
+  to: resolve_transfer_failure
+  name: 失敗
+  default: true
+- id: e31
+  from: resolve_transfer_failure
+  to: bank_transfer
+metadata:
+  assumptions:
+  - 5万円以上の判定は、申請単位の精算予定総額（税込・日本円換算後）を使用する。
+  - 会計連携とエビデンス保管は、両方が成功してから振込へ進む。
+  open_questions:
+  - 現行の差し戻し理由別件数と差し戻し率はどの程度か
+  - Power Appsアプリで実装可能な入力検証方式と改修権限は何か
+  - 再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か
+  - 部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか
+  - 閾値変更の承認者と変更履歴の保管要件は何か
+  - SLAと期限超過時の通知・エスカレーション経路は何か
+  - 代理承認、承認取消、再割当の許容ルールは何か
+  - Power Automate承認機能に必要なライセンスと環境権限を満たすか
+  - 会計システムが提供するAPIまたは入出力ファイル仕様は何か
+  - 連携失敗時の再実行上限と経理担当者への通知方法は何か
+  - 自動登録後の取消・訂正処理はどの経路で行うか
+  - 所定の保管先と法令・監査上の保持要件は何か
+  - 元ファイル、変換後ファイル、版のどれを保持対象とするか
+  - 保存失敗時の再実行と手動是正の責任者は誰か
+  - 並行処理の期限超過判定に用いるSLAは何か
+  - 会計登録失敗と保管失敗の例外責任者は同一か
+  - 片側が長期停止した場合の申請取消または手動振込の許可ルールは何か
+  - 振込処理で利用するシステムまたは銀行チャネルは何か
+  - 振込失敗時の再実行、取消、照合、承認ルールは何か
+  - 振込結果と会計登録結果の照合責任者は誰か
+  - 改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。
+  - 規程、監査、保持、権限分離の要件が未確認である。
+  inferences:
+  - 特定製品は選定されていないため、自動処理は製品非依存のシステム参加者としてモデル化した。
+  - 振込失敗時の具体的な再実行・取消・照合手順は未確定だが、失敗を是正して振込を再実行する抽象経路としてモデル化した。
+  bpr:
+    source_process:
+      id: expense_reimbursement_as_is
+      version: '1.0'
+    source_analysis_version: '1.5'
+    source_analysis_id: bpr-a-72939496e232d2e0
+    applied_improvements:
+    - IMP-001
+    - IMP-002
+    - IMP-003
+    - IMP-004
+    - IMP-005
+    - IMP-006
+    - IMP-007
+    - IMP-008
+    conditional_improvements: []
+    change_log:
+    - improvement_id: IMP-001
+      title: 申請時の入力・エビデンス検証を標準化
+      action: applied
+      summary: 初回申請と再申請に共通の入力ルール、必須項目、エビデンス要件、明確なエラーメッセージを定義し、送信前チェックを追加する。判断を要する経費妥当性は上長確認に残す。
+      expected_effect:
+        impact: high
+        notes: 差し戻し率と再申請工数の低減が見込まれるが、現状件数と差し戻し率が未確認のため定量効果は未算定。
+      confidence: high
+      condition: null
+      source_node_ids:
+      - submit_expense
+      - revise_resubmit
+      target_node_ids:
+      - submit_expense
+      - revise_resubmit
+      source_edge_ids: []
+      target_edge_ids: []
+    - improvement_id: IMP-002
+      title: 差し戻し理由と再申請ルールを標準化
+      action: applied
+      summary: 差し戻し理由コード、具体的指摘、修正対象、再申請期限、再確認対象を共通様式にし、上長・部門長の差し戻し情報を一つの履歴として追跡する。再申請後も不備が残る場合の扱いは業務ルールとして別途決定する。
+      expected_effect:
+        impact: medium
+        notes: 社員と承認者間の往復時の情報欠落を減らし、再差し戻しの抑制と履歴追跡性の向上が見込まれる。
+      confidence: high
+      condition: null
+      source_node_ids:
+      - manager_return
+      - department_head_return
+      - revise_resubmit
+      target_node_ids:
+      - manager_return
+      - department_head_return
+      - revise_resubmit
+      source_edge_ids:
+      - e13
+      target_edge_ids:
+      - e13
+    - improvement_id: IMP-003
+      title: 5万円基準の承認要否判定を自動化
+      action: applied
+      summary: 申請金額をシステムで50000円と比較し、5万円以上は部門長審査へ、未満は承認完了合流へ自動ルーティングする。閾値変更権限と変更履歴を統制する。
+      expected_effect:
+        impact: medium
+        notes: 上長の定型確認を削減し、ルーティングの一貫性を高める。月間件数が未確認のため総工数効果は未算定。
+      confidence: high
+      condition: null
+      source_node_ids:
+      - check_amount
+      target_node_ids:
+      - amount_gateway
+      source_edge_ids:
+      - e05
+      - e08
+      - e09
+      - e10
+      target_edge_ids:
+      - e05
+      - e09
+      - e10
+    - improvement_id: IMP-004
+      title: 承認状態・通知・滞留を一元管理
+      action: applied
+      summary: 上長・部門長の人的判断は維持しつつ、依頼通知、担当、状態、判断日時、コメント、差し戻し履歴を一元管理する。期限超過時の通知・エスカレーションはSLA決定後に設定する。
+      expected_effect:
+        impact: high
+        notes: 承認状況の可視化、担当間ハンドオフの追跡、滞留把握の改善が見込まれる。
+      confidence: medium
+      condition: null
+      source_node_ids:
+      - manager_review
+      - department_head_review
+      - manager_return
+      - department_head_return
+      target_node_ids:
+      - manager_review
+      - department_head_review
+      - manager_return
+      - department_head_return
+      source_edge_ids: []
+      target_edge_ids: []
+    - improvement_id: IMP-005
+      title: 会計システムへの再入力を連携に置換
+      action: applied
+      summary: 必要承認後の申請データを標準マッピングで会計システムへ連携し、手入力を廃止する。成功・失敗・失敗理由を申請単位で記録し、失敗時のみ経理担当者が原因確認、データ修正、再実行を行う。
+      expected_effect:
+        impact: high
+        notes: 経理の転記工数と入力エラーを大きく削減できる可能性があるが、件数と現行エラー率は未確認。
+      confidence: medium
+      condition: null
+      source_node_ids:
+      - register_accounting
+      - correct_registration
+      target_node_ids:
+      - register_accounting
+      - correct_registration
+      - registration_error_gateway
+      source_edge_ids: []
+      target_edge_ids: []
+    - improvement_id: IMP-006
+      title: エビデンス保管を自動化し申請と関連付け
+      action: applied
+      summary: 必要承認後、エビデンスを所定の保管先へ自動保存し、申請ID、保存先、保存結果、版を記録する。失敗・重複・欠損時のみ経理担当者が是正して再実行する。
+      expected_effect:
+        impact: medium
+        notes: 保管作業の削減と追跡性向上が見込まれる。保存件数と保管要件が未確認のため定量効果は未算定。
+      confidence: medium
+      condition: null
+      source_node_ids:
+      - store_evidence
+      target_node_ids:
+      - store_evidence
+      - evidence_result_gateway
+      - correct_evidence_storage
+      source_edge_ids: []
+      target_edge_ids: []
+    - improvement_id: IMP-007
+      title: 並行処理の完了・失敗・滞留を統制
+      action: applied
+      summary: 申請単位で会計登録とエビデンス保管の状態を管理し、両方成功時のみ振込可能とする。どちらかが失敗または期限超過の場合は担当者へ通知し、是正後に当該処理を再実行する。振込への迂回は許可しない。
+      expected_effect:
+        impact: high
+        notes: 振込前提の欠落、片側未完了の見逃し、滞留の不可視化を防ぎ、統制を強化する。
+      confidence: high
+      condition: null
+      source_node_ids:
+      - register_accounting
+      - correct_registration
+      - store_evidence
+      - bank_transfer
+      target_node_ids:
+      - register_accounting
+      - correct_registration
+      - store_evidence
+      - bank_transfer
+      - parallel_split
+      - parallel_join
+      - registration_error_gateway
+      - evidence_result_gateway
+      source_edge_ids:
+      - e19
+      - e20
+      - e22
+      - e24
+      target_edge_ids:
+      - e19
+      - e20
+      - e22
+      - e25
+      - e26
+      - e27
+    - improvement_id: IMP-008
+      title: 振込入力と実行結果の記録を標準化
+      action: applied
+      summary: 振込対象、金額、口座参照、支払日、申請IDを標準入力とし、振込受付番号、実行日時、成否、失敗理由を結果として記録する。失敗時の再実行・取消・照合手順は業務ルールとして定義する。
+      expected_effect:
+        impact: medium
+        notes: 振込結果の追跡と後続照合を容易にし、完了判定の曖昧さを減らす。
+      confidence: medium
+      condition: null
+      source_node_ids:
+      - bank_transfer
+      target_node_ids:
+      - bank_transfer
+      - transfer_result_gateway
+      - resolve_transfer_failure
+      source_edge_ids:
+      - e24
+      target_edge_ids:
+      - e28
+      - e29
+      - e30
+      - e31
+    source_node_context:
+      submit_expense:
+        name: 申請内容とエビデンスを登録して申請
+        participant: employee
+        system: Power Apps 経費精算アプリ
+        issues: []
+      manager_review:
+        name: 申請内容とエビデンスを確認
+        participant: manager
+        issues: []
+      manager_return:
+        name: 社員へ差し戻し
+        participant: manager
+        issues: []
+      revise_resubmit:
+        name: 内容を修正して再申請
+        participant: employee
+        system: Power Apps 経費精算アプリ
+        issues: []
+      check_amount:
+        name: 申請金額を確認
+        participant: manager
+        issues: []
+      department_head_review:
+        name: 申請を審査
+        participant: department_head
+        issues: []
+      department_head_return:
+        name: 社員へ差し戻し
+        participant: department_head
+        issues: []
+      register_accounting:
+        name: 会計システムへ経費情報を登録
+        participant: accounting
+        system: 会計システム
+        issues: []
+      correct_registration:
+        name: エラー内容を確認して修正
+        participant: accounting
+        system: 会計システム
+        issues: []
+      store_evidence:
+        name: エビデンスを所定の保管先へ保管
+        participant: accounting
+        issues: []
+      bank_transfer:
+        name: 振込処理
+        participant: accounting
+        issues: []
+    performance_targets:
+    - metric: 部門長承認ルーティングの手動判定件数
+      baseline: null
+      target: '0'
+      direction: decrease
+      note: 固定閾値判定を自動化するため正常系の手動判定を廃止する。
+      related_improvements:
+      - IMP-003
+      source_node_ids:
+      - check_amount
+      target_node_ids:
+      - amount_gateway
+    - metric: 申請差し戻し率
+      baseline: null
+      target: null
+      direction: decrease
+      note: 入力検証と差し戻し標準化の導入後に測定し目標値を設定する。
+      related_improvements:
+      - IMP-001
+      - IMP-002
+      source_node_ids:
+      - submit_expense
+      - manager_return
+      - department_head_return
+      - revise_resubmit
+      target_node_ids:
+      - submit_expense
+      - manager_return
+      - department_head_return
+      - revise_resubmit
+    - metric: 承認リードタイムとSLA超過件数
+      baseline: null
+      target: null
+      direction: decrease
+      note: 現時点ではSLAが未決定のため目標値は未設定とし、SLA決定後に設定する。
+      related_improvements:
+      - IMP-004
+      source_node_ids:
+      - manager_review
+      - department_head_review
+      target_node_ids:
+      - manager_review
+      - department_head_review
+    - metric: 会計システムへの手入力件数
+      baseline: null
+      target: 0（正常系）
+      direction: decrease
+      note: 正常系の手入力を廃止し、例外時だけ人が是正する。
+      related_improvements:
+      - IMP-005
+      source_node_ids:
+      - register_accounting
+      target_node_ids:
+      - register_accounting
+    - metric: エビデンス手動保管件数
+      baseline: null
+      target: 0（正常系）
+      direction: decrease
+      note: 正常系の手動保管を廃止し、例外時だけ人が是正する。
+      related_improvements:
+      - IMP-006
+      source_node_ids:
+      - store_evidence
+      target_node_ids:
+      - store_evidence
+    - metric: 並行処理の片側未完了による統制逸脱件数
+      baseline: null
+      target: '0'
+      direction: decrease
+      note: 両方成功した場合のみ振込へ進むControl Flowから決定的に導かれる統制目標。
+      related_improvements:
+      - IMP-007
+      source_node_ids:
+      - register_accounting
+      - store_evidence
+      - bank_transfer
+      target_node_ids:
+      - register_accounting
+      - store_evidence
+      - bank_transfer
+    - metric: 振込結果の未記録件数
+      baseline: null
+      target: '0'
+      direction: decrease
+      note: 振込結果を必ず記録し、成否を明示分岐する設計上の目標。
+      related_improvements:
+      - IMP-008
+      source_node_ids:
+      - bank_transfer
+      target_node_ids:
+      - bank_transfer
+    issue_disposition: {}
+    open_question_disposition:
+    - source: IMP-001
+      question: 現行の差し戻し理由別件数と差し戻し率はどの程度か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-001
+      question: Power Appsアプリで実装可能な入力検証方式と改修権限は何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-002
+      question: 再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-002
+      question: 部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-003
+      question: 閾値変更の承認者と変更履歴の保管要件は何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-003
+      question: 税・外貨換算・複数明細の場合に判定対象とする金額は何か
+      status: resolved
+      materiality: blocking
+      resolution: 5万円以上の判定には、申請単位の精算予定総額（税込・日本円換算後）を使用する。複数明細は合算し、外貨明細は組織で定める換算ルールにより日本円へ換算する。
+      note: Material Business Rule Gateで確定。
+    - source: IMP-004
+      question: SLAと期限超過時の通知・エスカレーション経路は何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-004
+      question: 代理承認、承認取消、再割当の許容ルールは何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-004
+      question: Power Automate承認機能に必要なライセンスと環境権限を満たすか
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-005
+      question: 会計システムが提供するAPIまたは入出力ファイル仕様は何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-005
+      question: 連携失敗時の再実行上限と経理担当者への通知方法は何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-005
+      question: 自動登録後の取消・訂正処理はどの経路で行うか
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-006
+      question: 所定の保管先と法令・監査上の保持要件は何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-006
+      question: 元ファイル、変換後ファイル、版のどれを保持対象とするか
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-006
+      question: 保存失敗時の再実行と手動是正の責任者は誰か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-007
+      question: 並行処理の期限超過判定に用いるSLAは何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-007
+      question: 会計登録失敗と保管失敗の例外責任者は同一か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-007
+      question: 片側が長期停止した場合の申請取消または手動振込の許可ルールは何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-008
+      question: 振込処理で利用するシステムまたは銀行チャネルは何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-008
+      question: 振込失敗時の再実行、取消、照合、承認ルールは何か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: IMP-008
+      question: 振込結果と会計登録結果の照合責任者は誰か
+      status: carried_forward
+      materiality: non_blocking
+      note: 製品非依存の抽象Control Flowは確定できるため、導入設計へ持ち越す。
+    - source: analysis
+      question: 改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。
+      status: carried_forward
+      materiality: non_blocking
+      note: 効果測定および統制設計のため継続確認する。
+    - source: analysis
+      question: 規程、監査、保持、権限分離の要件が未確認である。
+      status: carried_forward
+      materiality: non_blocking
+      note: 効果測定および統制設計のため継続確認する。

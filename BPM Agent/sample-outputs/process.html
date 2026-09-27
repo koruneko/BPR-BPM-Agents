@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>経費精算業務（As-Is）</title>
+<style>
+:root { color-scheme: light dark; font-family: "Segoe UI", "Yu Gothic UI", sans-serif; font-size: 16px; }
+* { box-sizing: border-box; }
+body { margin: 0; background: Canvas; color: CanvasText; font-size: 16px; }
+button, input { font: inherit; }
+header { padding: 22px 28px 16px; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); }
+h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.25; }
+header p { margin: 0; opacity: .78; font-size: 17px; line-height: 1.55; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; height: calc(100vh - 106px); min-height: 680px; }
+main.details-hidden { grid-template-columns: minmax(0, 1fr); }
+main.details-hidden aside { display: none; }
+.viewer { overflow: auto; padding: 0 22px 22px; background: color-mix(in srgb, Canvas 94%, CanvasText 6%); }
+.viewer-toolbar { position: sticky; top: 0; left: 0; z-index: 20; display: flex; align-items: center; gap: 8px; width: max-content; min-height: 58px; padding: 10px 12px; margin: 0 0 12px; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-top: 0; border-radius: 0 0 10px 10px; background: color-mix(in srgb, Canvas 94%, transparent); backdrop-filter: blur(8px); box-shadow: 0 2px 8px color-mix(in srgb, CanvasText 10%, transparent); }
+.toolbar-button { min-width: 42px; min-height: 38px; padding: 6px 11px; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; background: color-mix(in srgb, Canvas 92%, CanvasText 8%); color: CanvasText; cursor: pointer; }
+.toolbar-button:hover, .toolbar-button:focus-visible { border-color: color-mix(in srgb, CanvasText 48%, transparent); outline: none; }
+.zoom-range { width: 190px; min-width: 120px; }
+.zoom-value { min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.toolbar-separator { width: 1px; height: 30px; background: color-mix(in srgb, CanvasText 18%, transparent); margin: 0 2px; }
+.canvas { width: max-content; min-width: 100%; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-radius: 12px; overflow: visible; background: Canvas; }
+#process-svg { display: block; width: 4330px; height: 1130px; max-width: none; transform-origin: top left; }
+aside { border-left: 1px solid color-mix(in srgb, CanvasText 16%, transparent); padding: 24px; overflow: auto; font-size: 16px; line-height: 1.55; }
+aside h2 { margin-top: 0; font-size: 22px; line-height: 1.35; }
+.detail-row { margin: 0 0 18px; }
+.detail-row dt { font-weight: 700; font-size: 14px; opacity: .72; margin-bottom: 5px; }
+.detail-row dd { margin: 0; white-space: pre-wrap; font-size: 17px; }
+.lane-bg { stroke: color-mix(in srgb, CanvasText 18%, transparent); stroke-width: 1.3; }
+.lane-0 { fill: color-mix(in srgb, Canvas 97%, CanvasText 3%); }
+.lane-1 { fill: color-mix(in srgb, Canvas 93%, CanvasText 7%); }
+.lane-label { font-size: 18px; font-weight: 700; fill: CanvasText; }
+.flow-edge { fill: none; stroke: color-mix(in srgb, CanvasText 68%, transparent); stroke-width: 2.1; }
+.arrow-head { fill: color-mix(in srgb, CanvasText 68%, transparent); }
+.edge-label { font-size: 15px; font-weight: 650; fill: CanvasText; paint-order: stroke; stroke: Canvas; stroke-width: 5px; stroke-linejoin: round; }
+.jump-full-route { display: none; }
+#process-svg.show-full-returns .jump-full-route { display: block; }
+#process-svg.show-full-returns .jump-compact { display: none; }
+ .jump-stub, .jump-target-stub { fill: none; stroke: color-mix(in srgb, CanvasText 72%, transparent); stroke-width: 2.4; stroke-dasharray: 7 5; }
+.jump-target-stub { stroke-dasharray: none; }
+ .jump-badge { fill: Canvas; stroke: color-mix(in srgb, CanvasText 78%, transparent); stroke-width: 2.2; }
+ .jump-target { stroke-width: 3; }
+ .jump-badge-text { fill: CanvasText; font-size: 16px; font-weight: 800; pointer-events: none; }
+.jump-legend { width: min(760px, calc(100vw - 90px)); margin: 0 0 12px; padding: 9px 12px; border: 1px solid color-mix(in srgb, CanvasText 16%, transparent); border-radius: 9px; background: color-mix(in srgb, Canvas 96%, CanvasText 4%); font-size: 14px; line-height: 1.5; }
+.jump-legend summary { cursor: pointer; font-weight: 700; }
+.jump-legend p { margin: 7px 0; opacity: .78; }
+.task { fill: color-mix(in srgb, Canvas 86%, #4f7cff 14%); stroke: color-mix(in srgb, CanvasText 56%, transparent); stroke-width: 1.8; }
+.gateway { fill: color-mix(in srgb, Canvas 86%, #f5a623 14%); stroke: color-mix(in srgb, CanvasText 62%, transparent); stroke-width: 1.8; }
+.gateway-symbol { fill: CanvasText; font-size: 34px; font-weight: 500; }
+.gateway-caption { fill: CanvasText; font-size: 14px; font-weight: 650; }
+.event-start, .event-end, .event-end-inner { fill: Canvas; stroke: CanvasText; }
+.event-start { stroke-width: 2; }
+.event-end { stroke-width: 1.8; }
+.event-end-inner { fill: none; stroke-width: 1.8; }
+.node-label { fill: CanvasText; font-size: 18px; font-weight: 650; pointer-events: none; }
+.event-label { fill: CanvasText; font-size: 12px; font-weight: 650; pointer-events: none; }
+.process-node { cursor: pointer; outline: none; }
+.process-node:hover .task, .process-node:focus .task { stroke-width: 3.5; }
+.process-node:hover .gateway, .process-node:focus .gateway { stroke-width: 3.5; }
+.process-node.selected .task, .process-node.selected .gateway { stroke: #4f7cff; stroke-width: 3.5; }
+.badge { display:inline-block; padding:3px 9px; border-radius:999px; background:color-mix(in srgb, CanvasText 10%, transparent); margin:0 5px 5px 0; font-size:14px; }
+.issue-list { margin: 0; padding-left: 1.35em; }
+.issue-list li { margin: 0 0 7px; line-height: 1.55; }
+.issue-list li:last-child { margin-bottom: 0; }
+.empty { opacity:.64; }
+.muted { opacity:.7; }
+@media (max-width: 1100px) {
+  main { grid-template-columns: 1fr; height:auto; }
+  main:not(.details-hidden) aside { border-left:0; border-top:1px solid color-mix(in srgb, CanvasText 16%, transparent); min-height:320px; }
+  .zoom-range { width: 130px; }
+}
+</style>
+</head>
+<body>
+<header><h1>経費精算業務（As-Is）</h1><p>社員による経費申請から承認、経理処理、振込完了までの現行業務プロセス</p></header>
+<main id="main-layout">
+<section class="viewer" id="viewer">
+  <div class="viewer-toolbar" id="viewer-toolbar" role="toolbar" aria-label="業務フロー表示設定">
+    <button class="toolbar-button" id="zoom-out" type="button" title="10%縮小" aria-label="10%縮小">−</button>
+    <input class="zoom-range" id="zoom-range" type="range" min="5" max="200" step="5" value="100" aria-label="表示倍率">
+    <button class="toolbar-button" id="zoom-in" type="button" title="10%拡大" aria-label="10%拡大">＋</button>
+    <span class="zoom-value" id="zoom-value" aria-live="polite">100%</span>
+    <button class="toolbar-button" id="zoom-reset" type="button">100%</button>
+    <button class="toolbar-button" id="zoom-fit-width" type="button">幅に合わせる</button>
+    <button class="toolbar-button" id="zoom-fit" type="button">全体表示</button>
+    <span class="toolbar-separator" aria-hidden="true"></span>
+    <button class="toolbar-button" id="toggle-details" type="button" aria-pressed="false">詳細を隠す</button>
+    <span class="toolbar-separator" aria-hidden="true"></span><button class="toolbar-button" id="toggle-return-routes" type="button" aria-pressed="false">戻り線を表示</button>
+  </div>
+  <details class="jump-legend"><summary>↩ 長距離の戻り線 3件をジャンプ表示</summary><p>図の混雑を避けるため、長い戻り線だけ Rn の対応記号で省略しています。YAML/BPMN上の接続は変更していません。「戻り線を表示」で完全な線へ切り替えられます。</p><div><b>R1</b>: 内容を修正して再申請 → 申請内容とエビデンスを確認</div><div><b>R2</b>: 社員へ差し戻し → 内容を修正して再申請</div><div><b>R3</b>: エラー内容を確認して修正 → 会計システムへ経費情報を登録</div></details>
+  <div class="canvas"><svg id="process-svg" width="4330" height="1130" viewBox="0 0 4330 1130" role="img" aria-label="業務プロセス図">
+<defs><marker id="arrow" markerWidth="11" markerHeight="11" refX="10" refY="3.5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,7 L10,3.5 z" class="arrow-head"/></marker><marker id="jump-arrow" markerWidth="12" markerHeight="12" refX="11" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L0,8 L11,4 z" class="arrow-head"/></marker></defs>
+<rect class="lane-bg lane-0" x="40" y="60" width="4250" height="190" rx="5"/>
+<text class="lane-label" x="62" y="94">社員</text>
+<rect class="lane-bg lane-1" x="40" y="250" width="4250" height="292" rx="5"/>
+<text class="lane-label" x="62" y="284">直属の上長</text>
+<rect class="lane-bg lane-0" x="40" y="542" width="4250" height="214" rx="5"/>
+<text class="lane-label" x="62" y="576">部門長</text>
+<rect class="lane-bg lane-1" x="40" y="756" width="4250" height="334" rx="5"/>
+<text class="lane-label" x="62" y="790">経理担当者</text>
+<path class="flow-edge" d="M 272.0 155.0 L 530.0 155.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 760.0 155.0 L 800.0 155.0 L 800.0 396.0 L 840.0 396.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1070.0 396.0 L 1150.0 396.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1222.0 396.0 L 1341.0 396.0 L 1341.0 336.0 L 1460.0 336.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="1400.5" y="326.0" text-anchor="middle">不備あり</text>
+<path class="flow-edge" d="M 1222.0 396.0 L 1341.0 396.0 L 1341.0 456.0 L 1460.0 456.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="1400.5" y="446.0" text-anchor="middle">不備なし</text>
+<path class="flow-edge" d="M 1690.0 336.0 L 1730.0 336.0 L 1730.0 155.0 L 1770.0 155.0" marker-end="url(#arrow)"/>
+<path class="flow-edge jump-full-route" d="M 2000.0 155.0 L 2042.0 155.0 L 2042.0 20.0 L 798.0 20.0 L 798.0 396.0 L 840.0 396.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1690.0 456.0 L 1770.0 456.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 1842.0 456.0 L 1961.0 456.0 L 1961.0 649.0 L 2080.0 649.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2020.5" y="639.0" text-anchor="middle">5万円以上</text>
+<path class="flow-edge" d="M 1842.0 456.0 L 1961.0 456.0 L 1961.0 923.0 L 2080.0 923.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2020.5" y="913.0" text-anchor="middle">5万円未満</text>
+<path class="flow-edge" d="M 2310.0 649.0 L 2390.0 649.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2462.0 649.0 L 2504.0 649.0 L 2504.0 487.0 L 2038.0 487.0 L 2038.0 923.0 L 2080.0 923.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2271.0" y="477.0" text-anchor="middle">承認</text>
+<path class="flow-edge" d="M 2462.0 649.0 L 2700.0 649.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="2581.0" y="639.0" text-anchor="middle">却下</text>
+<path class="flow-edge jump-full-route" d="M 2930.0 649.0 L 2972.0 649.0 L 2972.0 20.0 L 1728.0 20.0 L 1728.0 155.0 L 1770.0 155.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2152.0 923.0 L 2390.0 923.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2462.0 923.0 L 2581.0 923.0 L 2581.0 863.0 L 2700.0 863.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2462.0 923.0 L 2581.0 923.0 L 2581.0 983.0 L 2700.0 983.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2930.0 863.0 L 3010.0 863.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 3082.0 863.0 L 3201.0 863.0 L 3201.0 820.0 L 3320.0 820.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="3218.5" y="810.0" text-anchor="middle">入力エラーあり</text>
+<path class="flow-edge" d="M 3082.0 863.0 L 3201.0 863.0 L 3201.0 923.0 L 3320.0 923.0" marker-end="url(#arrow)"/>
+<text class="edge-label" x="3218.5" y="913.0" text-anchor="middle">入力エラーなし</text>
+<path class="flow-edge jump-full-route" d="M 3550.0 820.0 L 3602.0 820.0 L 3602.0 1110.0 L 2646.0 1110.0 L 2646.0 863.0 L 2700.0 863.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 2930.0 983.0 L 3125.0 983.0 L 3125.0 923.0 L 3320.0 923.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 3392.0 923.0 L 3630.0 923.0" marker-end="url(#arrow)"/>
+<path class="flow-edge" d="M 3860.0 923.0 L 3940.0 923.0" marker-end="url(#arrow)"/>
+<g class="process-node" data-node-id="start" tabindex="0" role="button">
+<circle class="event-start" cx="246.0" cy="155.0" r="23.0"/>
+<text class="event-label" x="246.0" y="160.0" text-anchor="middle"><tspan x="246.0" dy="0">経費申請を開始</tspan></text>
+</g>
+<g class="process-node" data-node-id="submit_expense" tabindex="0" role="button">
+<rect class="task" x="530" y="109.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="645.0" y="150.0" text-anchor="middle"><tspan x="645.0" dy="0">申請内容とエビデンスを登録</tspan><tspan x="645.0" dy="22">して申請</tspan></text>
+</g>
+<g class="process-node" data-node-id="manager_review" tabindex="0" role="button">
+<rect class="task" x="840" y="350.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="955.0" y="402.0" text-anchor="middle"><tspan x="955.0" dy="0">申請内容とエビデンスを確認</tspan></text>
+</g>
+<g class="process-node" data-node-id="defect_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="1186.0,360.0 1222,396.0 1186.0,432.0 1150,396.0"/>
+<text class="gateway-symbol" x="1186.0" y="404.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="1186.0" y="458.0" text-anchor="middle"><tspan x="1186.0" dy="0">内容に不備があるか</tspan></text>
+</g>
+<g class="process-node" data-node-id="manager_return" tabindex="0" role="button">
+<rect class="task" x="1460" y="290.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="1575.0" y="342.0" text-anchor="middle"><tspan x="1575.0" dy="0">社員へ差し戻し</tspan></text>
+</g>
+<g class="process-node" data-node-id="revise_resubmit" tabindex="0" role="button">
+<rect class="task" x="1770" y="109.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="1885.0" y="161.0" text-anchor="middle"><tspan x="1885.0" dy="0">内容を修正して再申請</tspan></text>
+</g>
+<g class="process-node" data-node-id="check_amount" tabindex="0" role="button">
+<rect class="task" x="1460" y="410.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="1575.0" y="462.0" text-anchor="middle"><tspan x="1575.0" dy="0">申請金額を確認</tspan></text>
+</g>
+<g class="process-node" data-node-id="amount_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="1806.0,420.0 1842,456.0 1806.0,492.0 1770,456.0"/>
+<text class="gateway-symbol" x="1806.0" y="464.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="1806.0" y="518.0" text-anchor="middle"><tspan x="1806.0" dy="0">申請金額が5万円以上か</tspan></text>
+</g>
+<g class="process-node" data-node-id="department_head_review" tabindex="0" role="button">
+<rect class="task" x="2080" y="603.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="2195.0" y="655.0" text-anchor="middle"><tspan x="2195.0" dy="0">申請を審査</tspan></text>
+</g>
+<g class="process-node" data-node-id="approval_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="2426.0,613.0 2462,649.0 2426.0,685.0 2390,649.0"/>
+<text class="gateway-symbol" x="2426.0" y="657.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="2426.0" y="711.0" text-anchor="middle"><tspan x="2426.0" dy="0">部門長の審査結果</tspan></text>
+</g>
+<g class="process-node" data-node-id="department_head_return" tabindex="0" role="button">
+<rect class="task" x="2700" y="603.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="2815.0" y="655.0" text-anchor="middle"><tspan x="2815.0" dy="0">社員へ差し戻し</tspan></text>
+</g>
+<g class="process-node" data-node-id="approval_merge" tabindex="0" role="button">
+<polygon class="gateway" points="2116.0,887.0 2152,923.0 2116.0,959.0 2080,923.0"/>
+<text class="gateway-symbol" x="2116.0" y="931.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="2116.0" y="985.0" text-anchor="middle"><tspan x="2116.0" dy="0">必要な承認を完了</tspan></text>
+</g>
+<g class="process-node" data-node-id="parallel_split" tabindex="0" role="button">
+<polygon class="gateway" points="2426.0,887.0 2462,923.0 2426.0,959.0 2390,923.0"/>
+<text class="gateway-symbol" x="2426.0" y="931.0" text-anchor="middle">+</text>
+<text class="gateway-caption" x="2426.0" y="985.0" text-anchor="middle"><tspan x="2426.0" dy="0">経理処理を並行開始</tspan></text>
+</g>
+<g class="process-node" data-node-id="register_accounting" tabindex="0" role="button">
+<rect class="task" x="2700" y="817.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="2815.0" y="858.0" text-anchor="middle"><tspan x="2815.0" dy="0">会計システムへ経費情報を登</tspan><tspan x="2815.0" dy="22">録</tspan></text>
+</g>
+<g class="process-node" data-node-id="registration_error_gateway" tabindex="0" role="button">
+<polygon class="gateway" points="3046.0,827.0 3082,863.0 3046.0,899.0 3010,863.0"/>
+<text class="gateway-symbol" x="3046.0" y="871.0" text-anchor="middle">×</text>
+<text class="gateway-caption" x="3046.0" y="925.0" text-anchor="middle"><tspan x="3046.0" dy="0">入力エラーが発生したか</tspan></text>
+</g>
+<g class="process-node" data-node-id="correct_registration" tabindex="0" role="button">
+<rect class="task" x="3320" y="774" width="230" height="92" rx="12"/>
+<text class="node-label" x="3435.0" y="826.0" text-anchor="middle"><tspan x="3435.0" dy="0">エラー内容を確認して修正</tspan></text>
+</g>
+<g class="process-node" data-node-id="store_evidence" tabindex="0" role="button">
+<rect class="task" x="2700" y="937.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="2815.0" y="978.0" text-anchor="middle"><tspan x="2815.0" dy="0">エビデンスを所定の保管先へ</tspan><tspan x="2815.0" dy="22">保管</tspan></text>
+</g>
+<g class="process-node" data-node-id="parallel_join" tabindex="0" role="button">
+<polygon class="gateway" points="3356.0,887.0 3392,923.0 3356.0,959.0 3320,923.0"/>
+<text class="gateway-symbol" x="3356.0" y="931.0" text-anchor="middle">+</text>
+<text class="gateway-caption" x="3356.0" y="974.0" text-anchor="middle"><tspan x="3356.0" dy="0">登録と保管の完了を待ち</tspan><tspan x="3356.0" dy="22">合わせ</tspan></text>
+</g>
+<g class="process-node" data-node-id="bank_transfer" tabindex="0" role="button">
+<rect class="task" x="3630" y="877.0" width="230" height="92" rx="12"/>
+<text class="node-label" x="3745.0" y="929.0" text-anchor="middle"><tspan x="3745.0" dy="0">振込処理</tspan></text>
+</g>
+<g class="process-node" data-node-id="end" tabindex="0" role="button">
+<circle class="event-end" cx="3966.0" cy="923.0" r="23.0"/>
+<circle class="event-end-inner" cx="3966.0" cy="923.0" r="17.0"/>
+<text class="event-label" x="3966.0" y="971.0" text-anchor="middle"><tspan x="3966.0" dy="0">経費精算を完了</tspan></text>
+</g>
+<g class="jump-compact jump-source-connector"><title>R1: 内容を修正して再申請 → 申請内容とエビデンスを確認</title>
+<path class="jump-stub" d="M 2000.0 155.0 L 2034.0 155.0"/>
+<rect class="jump-badge jump-source" x="2034.0" y="136.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="2070.0" y="160.0" text-anchor="middle">R1</text></g>
+<g class="jump-compact jump-target-connector"><title>R1: 内容を修正して再申請 から戻る</title>
+<rect class="jump-badge jump-target" x="998.0" y="284.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="1034.0" y="308.0" text-anchor="middle">R1</text>
+<path class="jump-target-stub" d="M 1034.0 322.0 L 1034.0 350.0" marker-end="url(#jump-arrow)"/></g>
+<g class="jump-compact jump-source-connector"><title>R2: 社員へ差し戻し → 内容を修正して再申請</title>
+<path class="jump-stub" d="M 2930.0 649.0 L 2964.0 649.0"/>
+<rect class="jump-badge jump-source" x="2964.0" y="630.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="3000.0" y="654.0" text-anchor="middle">R2</text></g>
+<g class="jump-compact jump-target-connector"><title>R2: 社員へ差し戻し から戻る</title>
+<rect class="jump-badge jump-target" x="1928.0" y="43.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="1964.0" y="67.0" text-anchor="middle">R2</text>
+<path class="jump-target-stub" d="M 1964.0 81.0 L 1964.0 109.0" marker-end="url(#jump-arrow)"/></g>
+<g class="jump-compact jump-source-connector"><title>R3: エラー内容を確認して修正 → 会計システムへ経費情報を登録</title>
+<path class="jump-stub" d="M 3550.0 820.0 L 3584.0 820.0"/>
+<rect class="jump-badge jump-source" x="3584.0" y="801.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="3620.0" y="825.0" text-anchor="middle">R3</text></g>
+<g class="jump-compact jump-target-connector"><title>R3: エラー内容を確認して修正 から戻る</title>
+<rect class="jump-badge jump-target" x="2858.0" y="751.0" width="72.0" height="38.0" rx="19.0"/>
+<text class="jump-badge-text" x="2894.0" y="775.0" text-anchor="middle">R3</text>
+<path class="jump-target-stub" d="M 2894.0 789.0 L 2894.0 817.0" marker-end="url(#jump-arrow)"/></g>
+</svg></div>
+</section>
+<aside id="details">
+<h2>プロセス概要</h2>
+<dl>
+<div class="detail-row"><dt>プロセスID</dt><dd>expense_reimbursement_as_is</dd></div>
+<div class="detail-row"><dt>オーナー</dt><dd>未設定</dd></div>
+</dl>
+<p class="empty">図の処理・判断を選択すると詳細を表示します。</p>
+<noscript><p>JavaScriptが無効でも業務フロー図は表示できます。表示倍率、詳細パネル切り替え、詳細表示のみ利用できません。</p></noscript>
+</aside>
+</main>
+<script type="application/json" id="process-data">{"schema_version": "1.0", "process": {"id": "expense_reimbursement_as_is", "name": "経費精算業務（As-Is）", "description": "社員による経費申請から承認、経理処理、振込完了までの現行業務プロセス", "version": "1.0", "scope": {"start": "社員が経費申請を開始する", "end": "経理担当者が振込処理を完了する"}}, "participants": [{"id": "employee", "name": "社員", "type": "role"}, {"id": "manager", "name": "直属の上長", "type": "role"}, {"id": "department_head", "name": "部門長", "type": "role"}, {"id": "accounting", "name": "経理担当者", "type": "role"}], "nodes": [{"id": "start", "type": "start", "name": "経費申請を開始", "participant": "employee"}, {"id": "submit_expense", "type": "task", "task_type": "user", "name": "申請内容とエビデンスを登録して申請", "participant": "employee", "description": "社員がPower Appsの経費精算アプリに申請内容と領収書などのエビデンスを登録し、経費申請を行う。", "system": "Power Apps 経費精算アプリ", "inputs": ["経費情報", "エビデンス"], "outputs": ["経費申請", "エビデンス"]}, {"id": "manager_review", "type": "task", "task_type": "generic", "name": "申請内容とエビデンスを確認", "participant": "manager", "description": "直属の上長が経費申請の内容とエビデンスを確認し、不備の有無を判断する。", "inputs": ["経費申請", "エビデンス"], "outputs": ["経費申請"]}, {"id": "defect_gateway", "type": "gateway_exclusive", "name": "内容に不備があるか", "participant": "manager"}, {"id": "manager_return", "type": "task", "task_type": "generic", "name": "社員へ差し戻し", "participant": "manager", "description": "直属の上長が不備の内容を指摘して経費申請を社員へ差し戻す。", "inputs": ["経費申請"], "outputs": ["経費申請", "差し戻し指摘"]}, {"id": "revise_resubmit", "type": "task", "task_type": "user", "name": "内容を修正して再申請", "participant": "employee", "description": "社員が差し戻し指摘に基づいて申請内容またはエビデンスを修正し、Power Appsから再申請する。", "system": "Power Apps 経費精算アプリ", "inputs": ["経費申請", "エビデンス", "差し戻し指摘"], "outputs": ["経費申請", "エビデンス"]}, {"id": "check_amount", "type": "task", "task_type": "generic", "name": "申請金額を確認", "participant": "manager", "description": "直属の上長が申請金額を確認し、部門長承認の要否を判定する。", "inputs": ["経費申請"], "outputs": ["経費申請"]}, {"id": "amount_gateway", "type": "gateway_exclusive", "name": "申請金額が5万円以上か", "participant": "manager"}, {"id": "department_head_review", "type": "task", "task_type": "generic", "name": "申請を審査", "participant": "department_head", "description": "部門長が5万円以上の経費申請を審査し、承認または却下を判断する。", "inputs": ["経費申請", "エビデンス"], "outputs": ["経費申請"]}, {"id": "approval_gateway", "type": "gateway_exclusive", "name": "部門長の審査結果", "participant": "department_head"}, {"id": "department_head_return", "type": "task", "task_type": "generic", "name": "社員へ差し戻し", "participant": "department_head", "description": "部門長が却下理由または修正指示を付して経費申請を社員へ差し戻す。", "inputs": ["経費申請"], "outputs": ["経費申請", "差し戻し指摘"]}, {"id": "approval_merge", "type": "gateway_exclusive", "name": "必要な承認を完了", "participant": "accounting"}, {"id": "parallel_split", "type": "gateway_parallel", "name": "経理処理を並行開始", "participant": "accounting"}, {"id": "register_accounting", "type": "task", "task_type": "user", "name": "会計システムへ経費情報を登録", "participant": "accounting", "description": "経理担当者が経費申請の情報を会計システムへ入力して登録する。登録結果は後続で入力エラーの有無を判定する。", "system": "会計システム", "inputs": ["経費申請"], "outputs": ["経費申請", "入力エラー情報"]}, {"id": "registration_error_gateway", "type": "gateway_exclusive", "name": "入力エラーが発生したか", "participant": "accounting"}, {"id": "correct_registration", "type": "task", "task_type": "user", "name": "エラー内容を確認して修正", "participant": "accounting", "description": "経理担当者が入力エラー情報を確認し、登録内容を修正する。", "system": "会計システム", "inputs": ["経費申請", "入力エラー情報"], "outputs": ["経費申請"]}, {"id": "store_evidence", "type": "task", "task_type": "generic", "name": "エビデンスを所定の保管先へ保管", "participant": "accounting", "description": "経理担当者が領収書などのエビデンスを所定の保管先へ保管する。", "inputs": ["経費申請", "エビデンス"], "outputs": ["エビデンス"]}, {"id": "parallel_join", "type": "gateway_parallel", "name": "登録と保管の完了を待ち合わせ", "participant": "accounting"}, {"id": "bank_transfer", "type": "task", "task_type": "generic", "name": "振込処理", "participant": "accounting", "description": "会計システムへの登録とエビデンス保管の両方が完了した後、経理担当者が振込処理を行う。", "inputs": ["経費申請"], "outputs": ["経費申請"]}, {"id": "end", "type": "end", "name": "経費精算を完了", "participant": "accounting"}], "edges": [{"id": "e01", "from": "start", "to": "submit_expense"}, {"id": "e02", "from": "submit_expense", "to": "manager_review"}, {"id": "e03", "from": "manager_review", "to": "defect_gateway"}, {"id": "e04", "from": "defect_gateway", "to": "manager_return", "name": "不備あり", "condition": "申請内容またはエビデンスに不備がある"}, {"id": "e05", "from": "defect_gateway", "to": "check_amount", "name": "不備なし", "default": true}, {"id": "e06", "from": "manager_return", "to": "revise_resubmit"}, {"id": "e07", "from": "revise_resubmit", "to": "manager_review"}, {"id": "e08", "from": "check_amount", "to": "amount_gateway"}, {"id": "e09", "from": "amount_gateway", "to": "department_head_review", "name": "5万円以上", "condition": "申請金額が50000円以上"}, {"id": "e10", "from": "amount_gateway", "to": "approval_merge", "name": "5万円未満", "default": true}, {"id": "e11", "from": "department_head_review", "to": "approval_gateway"}, {"id": "e12", "from": "approval_gateway", "to": "approval_merge", "name": "承認", "condition": "部門長が承認"}, {"id": "e13", "from": "approval_gateway", "to": "department_head_return", "name": "却下", "default": true}, {"id": "e14", "from": "department_head_return", "to": "revise_resubmit"}, {"id": "e15", "from": "approval_merge", "to": "parallel_split"}, {"id": "e16", "from": "parallel_split", "to": "register_accounting"}, {"id": "e17", "from": "parallel_split", "to": "store_evidence"}, {"id": "e18", "from": "register_accounting", "to": "registration_error_gateway"}, {"id": "e19", "from": "registration_error_gateway", "to": "correct_registration", "name": "入力エラーあり", "condition": "会計システム登録時に入力エラーが発生"}, {"id": "e20", "from": "registration_error_gateway", "to": "parallel_join", "name": "入力エラーなし", "default": true}, {"id": "e21", "from": "correct_registration", "to": "register_accounting"}, {"id": "e22", "from": "store_evidence", "to": "parallel_join"}, {"id": "e23", "from": "parallel_join", "to": "bank_transfer"}, {"id": "e24", "from": "bank_transfer", "to": "end"}], "metadata": {"assumptions": [], "open_questions": ["各作業の標準所要時間", "月間申請件数と繁閑差", "プロセスオーナー", "SLA"], "inferences": ["修正再申請は、初回申請と同じPower Apps経費精算アプリを利用するものとしてモデル化した。", "会計システム登録の入力エラー情報は、経理担当者が修正時に参照する業務情報としてモデル化した。"]}}</script>
+<script type="application/json" id="layout-data">{"lane_by_node": {"start": "employee", "submit_expense": "employee", "manager_review": "manager", "defect_gateway": "manager", "manager_return": "manager", "revise_resubmit": "employee", "check_amount": "manager", "amount_gateway": "manager", "department_head_review": "department_head", "approval_gateway": "department_head", "department_head_return": "department_head", "approval_merge": "accounting", "parallel_split": "accounting", "register_accounting": "accounting", "registration_error_gateway": "accounting", "correct_registration": "accounting", "store_evidence": "accounting", "parallel_join": "accounting", "bank_transfer": "accounting", "end": "accounting"}, "lane_inferences": [], "jump_edges": {"e07": {"id": "R1", "source_node": "revise_resubmit", "target_node": "manager_review", "source_name": "内容を修正して再申請", "target_name": "申請内容とエビデンスを確認", "edge_label": "", "route_length": 1839.0, "backtrack": 1160}, "e14": {"id": "R2", "source_node": "department_head_return", "target_node": "revise_resubmit", "source_name": "社員へ差し戻し", "target_name": "内容を修正して再申請", "edge_label": "", "route_length": 2092.0, "backtrack": 1160}, "e21": {"id": "R3", "source_node": "correct_registration", "target_node": "register_accounting", "source_name": "エラー内容を確認して修正", "target_name": "会計システムへ経費情報を登録", "edge_label": "", "route_length": 1599.0, "backtrack": 850}}}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('process-data').textContent);
+  const layoutData = JSON.parse(document.getElementById('layout-data').textContent);
+  const nodes = Object.fromEntries((data.nodes || []).map(n => [String(n.id), n]));
+  const participants = Object.fromEntries((data.participants || []).map(p => [String(p.id), p]));
+  const inferredNodeIds = new Set((layoutData.lane_inferences || []).map(x => String(x.node)));
+  const details = document.getElementById('details');
+  const main = document.getElementById('main-layout');
+  const viewer = document.getElementById('viewer');
+  const toolbar = document.getElementById('viewer-toolbar');
+  const svg = document.getElementById('process-svg');
+  const toggleReturnRoutes = document.getElementById('toggle-return-routes');
+  const zoomRange = document.getElementById('zoom-range');
+  const zoomValue = document.getElementById('zoom-value');
+  const toggleDetails = document.getElementById('toggle-details');
+  const baseWidth = Number(svg.getAttribute('width')) || 4330;
+  const baseHeight = Number(svg.getAttribute('height')) || 1130;
+  const MIN_ZOOM = 0.05;
+  const MAX_ZOOM = 2.0;
+  let zoom = 1;
+  let fitMode = 'none';
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const list = v => Array.isArray(v) && v.length ? v.map(x => `<span class="badge">${esc(x)}</span>`).join('') : '<span class="empty">未設定</span>';
+  const issueList = v => Array.isArray(v) && v.length ? `<ul class="issue-list">${v.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<span class="empty">未設定</span>';
+  const row = (k, v) => `<div class="detail-row"><dt>${esc(k)}</dt><dd>${v}</dd></div>`;
+  function clampZoom(value) { return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value)); }
+  function applyZoom(value, preserveCenter = true) {
+    const next = clampZoom(value);
+    const old = zoom;
+    const centerX = viewer.scrollLeft + viewer.clientWidth / 2;
+    const centerY = viewer.scrollTop + viewer.clientHeight / 2;
+    zoom = next;
+    svg.style.width = `${baseWidth * zoom}px`;
+    svg.style.height = `${baseHeight * zoom}px`;
+    const percent = Math.round(zoom * 100);
+    zoomRange.value = String(Math.max(5, Math.min(200, Math.round(percent / 5) * 5)));
+    zoomValue.textContent = `${percent}%`;
+    if (preserveCenter && old > 0) {
+      const ratio = zoom / old;
+      requestAnimationFrame(() => {
+        viewer.scrollLeft = Math.max(0, centerX * ratio - viewer.clientWidth / 2);
+        viewer.scrollTop = Math.max(0, centerY * ratio - viewer.clientHeight / 2);
+      });
+    }
+  }
+  function fitToView() {
+    const availableWidth = Math.max(120, viewer.clientWidth - 46);
+    const availableHeight = Math.max(120, viewer.clientHeight - toolbar.offsetHeight - 46);
+    const fit = Math.min(1, availableWidth / baseWidth, availableHeight / baseHeight);
+    fitMode = 'all';
+    applyZoom(fit, false);
+    requestAnimationFrame(() => { viewer.scrollLeft = 0; viewer.scrollTop = 0; });
+  }
+  function fitToWidth() {
+    const availableWidth = Math.max(120, viewer.clientWidth - 46);
+    const fit = Math.min(1, availableWidth / baseWidth);
+    fitMode = 'width';
+    applyZoom(fit, false);
+    requestAnimationFrame(() => { viewer.scrollLeft = 0; });
+  }
+  function manualZoom(value) { fitMode = 'none'; applyZoom(value); }
+
+  document.getElementById('zoom-out').addEventListener('click', () => manualZoom(zoom - 0.10));
+  document.getElementById('zoom-in').addEventListener('click', () => manualZoom(zoom + 0.10));
+  document.getElementById('zoom-reset').addEventListener('click', () => manualZoom(1));
+  document.getElementById('zoom-fit-width').addEventListener('click', fitToWidth);
+  document.getElementById('zoom-fit').addEventListener('click', fitToView);
+  zoomRange.addEventListener('input', () => manualZoom(Number(zoomRange.value) / 100));
+
+  if (toggleReturnRoutes) {
+    toggleReturnRoutes.addEventListener('click', () => {
+      const showing = svg.classList.toggle('show-full-returns');
+      toggleReturnRoutes.textContent = showing ? '戻り線を省略' : '戻り線を表示';
+      toggleReturnRoutes.setAttribute('aria-pressed', String(showing));
+    });
+  }
+
+  toggleDetails.addEventListener('click', () => {
+    const hidden = main.classList.toggle('details-hidden');
+    toggleDetails.textContent = hidden ? '詳細を表示' : '詳細を隠す';
+    toggleDetails.setAttribute('aria-pressed', String(hidden));
+    if (fitMode === 'all') requestAnimationFrame(fitToView);
+    if (fitMode === 'width') requestAnimationFrame(fitToWidth);
+  });
+  window.addEventListener('resize', () => { if (fitMode === 'all') requestAnimationFrame(fitToView); if (fitMode === 'width') requestAnimationFrame(fitToWidth); });
+
+  function show(id) {
+    const n = nodes[id]; if (!n) return;
+    document.querySelectorAll('.process-node').forEach(x => x.classList.toggle('selected', x.dataset.nodeId === id));
+    const explicitP = participants[String(n.participant)]?.name || n.participant || '';
+    const layoutLane = layoutData.lane_by_node?.[id];
+    const inferredP = layoutLane && participants[String(layoutLane)]?.name;
+    const p = explicitP || (inferredP ? `${inferredP}${inferredNodeIds.has(String(id)) ? '（表示上推定）' : ''}` : '未割当');
+    const auto = n.automation || {};
+    details.innerHTML = `<h2>${esc(n.name || id)}</h2><dl>` +
+      row('種類', esc(n.type || '')) + row('担当', esc(p)) +
+      row('説明', esc(n.description || '未設定')) + row('利用システム', esc(n.system || '未設定')) +
+      row('入力', list(n.inputs)) + row('出力', list(n.outputs)) +
+      row('所要時間', esc(n.duration || '未設定')) + row('頻度', esc(n.frequency || '未設定')) + row('課題', issueList(n.issues)) +
+      row('自動化候補', auto.candidate === true ? 'あり' : auto.candidate === false ? 'なし' : '未評価') +
+      row('自動化メモ', esc(auto.notes || '未設定')) + '</dl>';
+  }
+  document.querySelectorAll('.process-node').forEach(el => {
+    el.addEventListener('click', () => show(el.dataset.nodeId));
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(el.dataset.nodeId); } });
+  });
+})();
+</script>
+</body>
+</html>

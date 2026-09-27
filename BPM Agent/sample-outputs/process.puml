@@ -1,0 +1,66 @@
+@startuml
+title 経費精算業務（As-Is）
+left to right direction
+skinparam shadowing false
+skinparam RoundCorner 8
+skinparam defaultTextAlignment center
+skinparam ArrowThickness 1
+
+rectangle "社員" as lane_employee {
+  circle "経費申請を開始" as n_start
+  rectangle "申請内容とエビデンスを登録して申請" as n_submit_expense
+  rectangle "内容を修正して再申請" as n_revise_resubmit
+}
+
+rectangle "直属の上長" as lane_manager {
+  rectangle "申請内容とエビデンスを確認" as n_manager_review
+  diamond "内容に不備があるか" as n_defect_gateway
+  rectangle "社員へ差し戻し" as n_manager_return
+  rectangle "申請金額を確認" as n_check_amount
+  diamond "申請金額が5万円以上か" as n_amount_gateway
+}
+
+rectangle "部門長" as lane_department_head {
+  rectangle "申請を審査" as n_department_head_review
+  diamond "部門長の審査結果" as n_approval_gateway
+  rectangle "社員へ差し戻し" as n_department_head_return
+}
+
+rectangle "経理担当者" as lane_accounting {
+  diamond "必要な承認を完了" as n_approval_merge
+  diamond "AND\n経理処理を並行開始" as n_parallel_split
+  rectangle "会計システムへ経費情報を登録" as n_register_accounting
+  diamond "入力エラーが発生したか" as n_registration_error_gateway
+  rectangle "エラー内容を確認して修正" as n_correct_registration
+  rectangle "エビデンスを所定の保管先へ保管" as n_store_evidence
+  diamond "AND\n登録と保管の完了を待ち合わせ" as n_parallel_join
+  rectangle "振込処理" as n_bank_transfer
+  circle "経費精算を完了" as n_end
+}
+
+n_start --> n_submit_expense
+n_submit_expense --> n_manager_review
+n_manager_review --> n_defect_gateway
+n_defect_gateway --> n_manager_return : 不備あり [申請内容またはエビデンスに不備がある]
+n_defect_gateway --> n_check_amount : 不備なし
+n_manager_return --> n_revise_resubmit
+n_revise_resubmit --> n_manager_review
+n_check_amount --> n_amount_gateway
+n_amount_gateway --> n_department_head_review : 5万円以上 [申請金額が50000円以上]
+n_amount_gateway --> n_approval_merge : 5万円未満
+n_department_head_review --> n_approval_gateway
+n_approval_gateway --> n_approval_merge : 承認 [部門長が承認]
+n_approval_gateway --> n_department_head_return : 却下
+n_department_head_return --> n_revise_resubmit
+n_approval_merge --> n_parallel_split
+n_parallel_split --> n_register_accounting
+n_parallel_split --> n_store_evidence
+n_register_accounting --> n_registration_error_gateway
+n_registration_error_gateway --> n_correct_registration : 入力エラーあり [会計システム登録時に入力エラーが発生]
+n_registration_error_gateway --> n_parallel_join : 入力エラーなし
+n_correct_registration --> n_register_accounting
+n_store_evidence --> n_parallel_join
+n_parallel_join --> n_bank_transfer
+n_bank_transfer --> n_end
+
+@enduml
