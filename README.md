@@ -15,7 +15,8 @@ Microsoft 365 Copilot Agent Builder の Skills 機能を利用した、業務プ
 - 構造・参照・Gateway・到達性・入出力などをレビュー
 - 検証済み YAML から BPMN 2.0 XML、PlantUML、HTML を生成
 
-パッケージ: [BPM Agent.zip](./BPM%20Agent.zip)
+- [BPM Agent のソースと詳細](./bpm-agent/)
+- [BPM Agent.zip](./BPM%20Agent.zip)
 
 ### BPR Agent
 
@@ -32,7 +33,8 @@ As-Is 業務プロセスをもとに課題と改善案を分析し、ユーザ�
 
 BPM Agent で作成した `process.yaml` を As-Is の入力として利用できます。
 
-パッケージ: [BPR Agent.zip](./BPR%20Agent.zip)
+- [BPR Agent のソースと詳細](./bpr-agent/)
+- [BPR Agent.zip](./BPR%20Agent.zip)
 
 ## Requirements
 
@@ -58,3 +60,9 @@ BPR Agent で To-Be を作成する場合、改善案はユーザーが明示的
 
 - [Privacy Statement](./PRIVACY.md)
 - [Terms of Use](./TERMS.md)
+
+
+## License
+
+コードおよびドキュメントは [MIT License](./LICENSE) で公開しています。
+Microsoft 製品・サービスおよび第三者のコンテンツには、それぞれの利用条件が適用されます。
