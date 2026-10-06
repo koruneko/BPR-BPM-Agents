@@ -1,8 +1,8 @@
 # Privacy Statement
 
-最終更新日: 2026-09-28
+最終更新日: 2026-10-07
 
-本声明は、このリポジトリで公開する BPM Agent および BPR Agent に適用されます。
+本声明は、このリポジトリで公開する BPM Agent、BPR Agent、および To-Be Gap Analyst Agent に適用されます。
 
 ## 開発者によるデータ収集
 
