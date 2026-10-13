@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-SCRIPTS = Path(__file__).resolve().parents[1] / 'skills' / 'gap-delivery' / 'scripts'
+SCRIPTS = Path(__file__).resolve().parents[1] / 'gap-delivery' / 'scripts'
 sys.path.insert(0, str(SCRIPTS))
 from generate_delivery import _validate_quality, _write_markdown_report, _write_roadmap, _verify_outputs, _write_csv
 from render_report import render
@@ -27,7 +27,7 @@ def fixture():
         'questions':[], 'next_actions':[{'id':'NA-001','title':'Review task','first_step':'Review scope with owner', 'expected_result':'Scoped work','priority':'high','consult_with':'Process owner','status':'confirmed','source':'User response','related_action_ids':['ACT-001'],'question_ids':[]}],
         'roadmap':[{'phase':'1. Preparation','action_ids':['ACT-001','ACT-002','ACT-003'],'start_condition':'初回準備を開始できること','transition_condition':'項目整理を確認したこと'}],
         'execution_sequence':[{'order':1,'name':'Research','action_ids':['ACT-001','ACT-002','ACT-003'],'status':'confirmed','reason':'Owner agreed to work order'}],
-        'dialogue':{'status':'completed','agreed_scope':'Assess selected tasks','confirmation_source':'User approved'},
+        'dialogue':{'status':'completed','agreed_scope':'Assess selected tasks','confirmation_source':'User approved whole analysis', 'final_confirmation':{'scope':'overall_gap_analysis','prompt':'今回のGap分析の整理内容全体を了承しますか？','response':'はい、全体を了承します'}},
     }
 
 

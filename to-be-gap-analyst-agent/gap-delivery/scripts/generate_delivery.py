@@ -107,6 +107,54 @@ def _valid_source_refs(value: Any) -> bool:
     return True
 
 
+def _final_approval_issues(dialogue: dict[str, Any]) -> list[str]:
+    """Require confirmation of the *whole proposed analysis*, not a subdecision.
+
+    This is a contract/evidence consistency check, not an authentication of the
+    user's conversation. The agent must not invent the prompt or its reply.
+    """
+    approval = dialogue.get("final_confirmation")
+    if not isinstance(approval, dict):
+        return ["dialogue.final_confirmation must record the explicit overall-analysis approval exchange"]
+    if approval.get("scope") != "overall_gap_analysis":
+        return ["dialogue.final_confirmation.scope must be overall_gap_analysis"]
+    prompt = approval.get("prompt")
+    response = approval.get("response")
+    if not isinstance(prompt, str) or not isinstance(response, str) or not prompt.strip() or not response.strip():
+        return ["dialogue.final_confirmation requires the actual approval prompt and user response"]
+    if not re.search(r"(?:今回の整理|分析全体|Gap分析|最終まとめ|最終整理)", prompt, re.I) or not re.search(r"(?:了承|承認|合意|確定|これでよい|よろしい)", prompt):
+        return ["dialogue.final_confirmation.prompt must explicitly seek approval of the overall Gap analysis, not just a role, date or task"]
+    if not re.search(r"(?:OK|はい|承認|了承|同意|進めて|問題ない|それで|よい|お願いします)", response, re.I):
+        return ["dialogue.final_confirmation.response must contain an affirmative user reply to that overall prompt"]
+    return []
+
+
+def _stage_coverage_issues(actions: list[dict[str, Any]]) -> list[str]:
+    """Flag missing implementation handoffs before in-scope integrated acceptance.
+
+    A design-only scope is legitimate; it cannot simultaneously promise an
+    integrated acceptance of unimplemented interfaces without an implementation
+    activity (or an explicit documented external implementation handoff).
+    """
+    names = [str(a.get("title", "")) for a in actions]
+    integrated = any(re.search(r"(?:結合|統合).*(?:試験|受入|確認)", t) for t in names)
+    if not integrated:
+        return []
+    problems = []
+    domains = {
+        "accounting": (r"(?:会計|経理).*設計", r"(?:会計|経理).*(?:実装|構築|開発|設定|実装確認)", "会計連携"),
+        "evidence": (r"(?:エビデンス|証憑|証拠|保管).*設計", r"(?:エビデンス|証憑|証拠|保管).*(?:実装|構築|開発|設定|実装確認)", "エビデンス保管"),
+    }
+    for design_pattern, implementation_pattern, label in domains.values():
+        if any(re.search(design_pattern, name) for name in names) and not any(re.search(implementation_pattern, name) for name in names):
+            external = any(label in str(a.get("stage_split_rationale", "")) and
+                           re.search(r"(?:他工程|別プロジェクト|外部実装|実装済)", str(a.get("stage_split_rationale", "")))
+                           for a in actions)
+            if not external:
+                problems.append(f"{label}: integration/acceptance work is present but implementation or documented external handoff ACT is missing")
+    return problems
+
+
 def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, Any]:
     """Validate the information model before any derivative is generated.
 
@@ -276,6 +324,10 @@ def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, An
                 condition = str(rel.get('condition','')).strip()
                 if condition.startswith(f"{dep}の成果のうち"):
                     issues.append(f"{aid} <- {dep}: condition does not identify the specific required input or decision")
+                if re.fullmatch(r"ACT-\d+の具体的成果物が利用可能であること", condition):
+                    issues.append(f"{aid} <- {dep}: generic required condition must name the actual artifact/decision")
+                if rel.get('source') == '原本の前提条件と分析上の段階分割':
+                    issues.append(f"{aid} <- {dep}: dependency source must cite a specific source/decision, not a generic description")
             all_relations.append((aid, rel))
     if final and len(all_relations) >= 3:
         from collections import Counter
@@ -286,6 +338,14 @@ def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, An
         ) for _, rel in all_relations]
         if Counter(signatures).most_common(1)[0][1] * 4 >= len(signatures) * 3:
             issues.append('Dependency explanations are overly repetitive; classify each relation by its own gate and evidence')
+
+    if final:
+        issues.extend(_stage_coverage_issues(actions))
+        for action in actions:
+            title = str(action.get("title", ""))
+            if re.search(r"(?:KPI|ベースライン|現状値).*(?:導入|移行|運用計画)", title):
+                if not action.get("stage_split_rationale"):
+                    issues.append(f"{action.get('id')}: baseline measurement and deployment planning have different phases; split ACT or justify")
 
     # Role labels do not establish one specific person's availability/capacity.
     schedule = data.get('schedule') or {}
@@ -347,6 +407,15 @@ def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, An
             if rel["predecessor_id"] not in next_ids:
                 issues.append(f"{nid} dependency has unknown NA: {rel['predecessor_id']}")
 
+    if final and len(questions) >= 12:
+        # Link only questions directly *addressed* by this next step. It is not
+        # a surrogate index of every open question in the whole programme.
+        pending_ids = {q['id'] for q in questions if q.get('status') != 'resolved'}
+        for na in next_actions:
+            linked = set(na.get('question_ids') or []) & pending_ids
+            if len(linked) >= 12 and len(linked) * 4 >= len(pending_ids) * 3:
+                issues.append(f"{na.get('id')}: Next Action links almost all open questions; split into specific follow-ups and link only directly addressed Q IDs")
+
     for q in questions:
         qid = q.get("id", "<unknown>")
         if final and not _valid_source_refs(q.get("source_refs")):
@@ -402,6 +471,11 @@ def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, An
             issues.append("final mode requires dialogue.status=completed")
         if not dialogue.get("agreed_scope") or not dialogue.get("confirmation_source"):
             issues.append("final mode requires agreed_scope and confirmation_source")
+        issues.extend(_final_approval_issues(dialogue))
+        verification = data.get("verification") or {}
+        for statement in verification.get("performed", []) if isinstance(verification.get("performed", []), list) else []:
+            if isinstance(statement, str) and re.search(r"(?:検証|照合|確認).{0,60}(?:予定|未実施|今後実施)", statement):
+                issues.append("verification.performed contains a planned/unperformed check; move it to not_performed or record the actual outcome")
         if data.get("status") != "analysis_complete":
             issues.append("final mode requires status=analysis_complete")
 
@@ -522,6 +596,15 @@ def _write_markdown_report(data: dict[str, Any], path: Path) -> None:
             "",
         ]
     lines += ["## 確認したいこと", ""]
+    if final and len(questions) >= 12:
+        # Link only questions directly *addressed* by this next step. It is not
+        # a surrogate index of every open question in the whole programme.
+        pending_ids = {q['id'] for q in questions if q.get('status') != 'resolved'}
+        for na in next_actions:
+            linked = set(na.get('question_ids') or []) & pending_ids
+            if len(linked) >= 12 and len(linked) * 4 >= len(pending_ids) * 3:
+                issues.append(f"{na.get('id')}: Next Action links almost all open questions; split into specific follow-ups and link only directly addressed Q IDs")
+
     for q in questions:
         lines += [
             f"- **{q.get('id')}** [{q.get('status', 'open')}] {q.get('question', '')} — {q.get('respondent_candidate', '')}",

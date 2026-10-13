@@ -48,6 +48,9 @@ def next_action_section(data,rows):
     out.append('<h3>対話で整理した内容</h3><p>整理の状態: '+badge(dialogue.get('status','in_progress'))+'</p><p><strong>今回の範囲</strong>: '+esc(dialogue.get('agreed_scope') or '対話で確認')+'</p><p>'+esc(dialogue.get('summary') or '優先度と次の行動を相談します。')+'</p>')
     out.append('<h3>次の確認へ持ち越したこと</h3>'+items(dialogue.get('deferred_topics',[])))
     if dialogue.get('confirmation_source'):out.append('<p class="muted">整理内容を確認した根拠: '+esc(dialogue['confirmation_source'])+'</p>')
+    if isinstance(dialogue.get('final_confirmation'),dict):
+        confirmation=dialogue['final_confirmation']
+        out.append('<p class="muted">最終整理への了承を求めた質問: '+esc(confirmation.get('prompt',''))+'</p><p class="muted">その回答: '+esc(confirmation.get('response',''))+'</p>')
     return ''.join(out)+'</section>'
 
 def render(data):

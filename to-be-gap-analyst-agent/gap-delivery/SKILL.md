@@ -158,3 +158,9 @@ planning_decisionsはtopic/decision/status(proposed/confirmed)/sourceの配列�
 
 更新後は `gap-analysis.json` だけを正本として修正し、CSV/Markdown/ロードマップ/HTML/ZIPを個別編集しない。必ず `gap_workflow.py final` を再実行して全成果物とmanifestを更新する。旧採否が変わった場合は、新しい採否を受領した事実に基づく。自身の判断で改善採否を変えない。
 
+
+## 最終了承と検証記録の正確性（追加）
+
+`dialogue.final_confirmation` は全体への了承を尋ねた実際のprompt/response/scopeを保持し、限定的な質問へのOKで代用しない。全体の明示了承前に `dialogue.status=completed` にせず `final` を実行しない。正式生成は明示的な全体了承と原本を照合する。verification.performedには実施済みのチェックと結果のみを入れ、予定や未実施を混ぜない。
+
+Next Actionが扱うQはその行動の直接確認範囲に限定する。実装ACTの欠落、根拠のない必須依存、業務調査と移行準備の不適切な混在はfinal品質ゲートで拒否する。

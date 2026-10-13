@@ -1,3 +1,11 @@
+## 追加契約（全体了承とタスク追跡）
+
+`dialogue.final_confirmation` は `{scope:"overall_gap_analysis",prompt:"利用者に実際に送信した全体の整理内容への最終確認質問",response:"その質問への実際の肯定回答"}`。役割候補など単独項目への承認を全体確認として記録しない。`dialogue.status=completed` と `analysis_complete` はこの全体了承後に限る。これは入力された証跡の整合検査であり、入力原文を偽造できる相手への暗号学的証明ではない。
+
+`next_actions[].question_ids` は直近の行動で直接確認する質問のみ。合同調整会の開催だけをもって全質問を解決したり全件をリンクしない。個別テーマの調査NAと後続Qを区別する。
+
+設計対象の外部連携/保管に結合受入が含まれる場合は、実装または既存の外部実装への引継ぎを明確なACTと参照で記録。`verification.performed` に「検証を実施予定」を置かず、未実施は `not_performed` に記録する。
+
 # 出力契約 v1.6
 
 ## v3後続改善: 業務計画の品質と表示キー

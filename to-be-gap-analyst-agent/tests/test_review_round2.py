@@ -67,13 +67,13 @@ def _test_complete_final_without_questions(self):
         def refs(): return [dict(sr)]
         data.update({'status':'analysis_complete','input_validation':{'status':'pass','issues':[]},
           'scope_summary':{k:f'{k}: Recorded agreed scope and evidence' for k in ('included','excluded','later','external','temporary')},
-          'gaps':[{'id':'GAP-001','title':'入力条件の差異','priority':'high','action_ids':['ACT-001'], 'question_ids':[], 'improvement_ids':['IMP-001'], 'source_refs':refs(),
+          'gaps':[{'id':'GAP-001','title':'入力条件の差異','priority':'high','priority_reason':'Input validation minimizes corrections while the remaining scope is bounded', 'action_ids':['ACT-001'], 'question_ids':[], 'improvement_ids':['IMP-001'], 'source_refs':refs(),
              'decision_context': {k:'Evidence and agreed context for '+k for k in delivery.DECISION_CONTEXT_FIELDS if k!='source_refs'} | {'source_refs':refs()}}],
-          'actions':[{'id':'ACT-001','title':'変更内容を整理','priority':'high','owner_candidate':'Business owner','gap_ids':['GAP-001'],'question_ids':[], 'source_refs':refs(), 'depends_on':[],'dependency_relations':[]}],
+          'actions':[{'id':'ACT-001','title':'変更内容を整理','priority':'high','priority_reason':'Clarifying input rules creates testable requirements and avoids rework', 'deliverables':['Documented input-validation requirement list'], 'owner_candidate':'Business owner','gap_ids':['GAP-001'],'question_ids':[], 'source_refs':refs(), 'depends_on':[],'dependency_relations':[]}],
           'next_actions':[{'id':'NA-001','title':'責任者と確認','kind':'確認','priority':'high','reason':'To-Be検討のため', 'first_step':'担当者と要件を確認','consult_with':'Business owner','owner_status':'unassigned','expected_result':'合意した実行範囲','related_action_ids':['ACT-001'],'question_ids':[], 'depends_on':[],'status':'confirmed','source':'User confirmed the plan'}],
           'roadmap':[{'title':'Phase One','action_ids':['ACT-001']}],
           'execution_sequence':[{'action_ids':['ACT-001']}],
-          'dialogue':{'status':'completed','agreed_scope':'Confirm target process scope','summary':'User agreed','deferred_topics':[],'confirmation_source':'User confirmed the plan'},
+          'dialogue':{'status':'completed','agreed_scope':'Confirm target process scope','summary':'User agreed','deferred_topics':[],'confirmation_source':'User confirmed entire plan','final_confirmation':{'scope':'overall_gap_analysis','prompt':'今回のGap分析の整理全体を了承しますか？','response':'はい、了承します'}},
         })
         for i,k in enumerate(delivery.DIMENSIONS):
             data['analysis_dimensions'][k]={'status':'確認済み','summary':f'Process evidence and assessment specific to {k}, observation {i} supported by the As-Is and To-Be processes.', 'gap_ids':['GAP-001'],'question_ids':[],'source_refs':refs()}
