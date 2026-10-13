@@ -7,6 +7,7 @@ derived artifacts synchronized with one canonical analysis JSON.
 from __future__ import annotations
 
 import argparse
+import html
 import csv
 import hashlib
 import json
@@ -20,6 +21,7 @@ from typing import Any, Iterable
 from inspect_sources import inspect, pack_files, validate as validate_sources
 from planning_report import dependency_relations, validate_dependencies
 from render_report import GENERATOR_ID, render, validate_next_actions
+from report_format import natural
 
 SCRIPT_NAMES = [
     "gap_workflow.py",
@@ -223,6 +225,93 @@ def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, An
         if len(repeated_fields) >= 3:
             issues.append("Gap decision_context is overly templated across items: " + ", ".join(repeated_fields))
 
+    # A reviewed decision needs an item-specific reason, not a shared paragraph.
+    # These checks validate evidence quality, not an arbitrary number of GAPs.
+    for group_name, rows in (("GAP", gaps), ("ACT", actions)):
+        reasons = []
+        for row in rows:
+            reason = row.get("priority_reason")
+            if final and (not isinstance(reason, str) or len(reason.strip()) < 15 or _is_placeholder(reason)):
+                issues.append(f"{row.get('id', group_name)}.priority_reason needs a specific rationale")
+            if isinstance(reason, str) and reason.strip():
+                reasons.append(reason.strip())
+        if final and len(reasons) >= 3:
+            from collections import Counter
+            common, occurrences = Counter(reasons).most_common(1)[0]
+            if occurrences >= 3 and occurrences * 4 >= len(reasons) * 3:
+                issues.append(f"{group_name} priority_reason is overly repetitive; explain evidence and trade-offs per item")
+
+    for action in actions:
+        aid = action.get('id','<unknown>')
+        deliverables = action.get('deliverables') if action.get('deliverables') is not None else action.get('deliverable')
+        values = deliverables if isinstance(deliverables,list) else ([deliverables] if deliverables else [])
+        if final and not values:
+            issues.append(f'{aid}.deliverables requires a concrete reviewable output')
+        for item in values:
+            if final and (not isinstance(item,str) or _is_placeholder(item) or
+                          str(item).endswith('の業務ルール・設定または検証記録')):
+                issues.append(f'{aid}.deliverables has a generic/placeholder value')
+
+    all_relations = []
+    vague_dependency = (
+        "後続作業の入力または検証対象になるため。",
+        "To-Beの制御順と実装上の論理関係に基づく分析提案。",
+    )
+    for a in actions:
+        aid = a.get("id", "<unknown>")
+        title = str(a.get("title", ""))
+        # A feasibility investigation is not the same work package as implementing
+        # a technical integration. Without an explicit phase split, ownership and
+        # estimates for such an ACT are misleading.
+        if final and any(x in title for x in ("確認", "調査")) and any(x in title for x in ("実装", "構築", "開発")):
+            if not a.get("stage_split_rationale"):
+                issues.append(f"{aid} combines investigation and implementation; split work stages or document a specific stage_split_rationale")
+        for rel in dependency_relations(a):
+            if not final:
+                continue
+            dep = rel.get('predecessor_id')
+            if rel.get('type') == 'required':
+                if rel.get('reason','').strip() in vague_dependency or rel.get('source','').strip() in vague_dependency:
+                    issues.append(f"{aid} <- {dep}: unsupported generic required dependency")
+                condition = str(rel.get('condition','')).strip()
+                if condition.startswith(f"{dep}の成果のうち"):
+                    issues.append(f"{aid} <- {dep}: condition does not identify the specific required input or decision")
+            all_relations.append((aid, rel))
+    if final and len(all_relations) >= 3:
+        from collections import Counter
+        signatures = [(
+            str(rel.get('reason','')).strip(),
+            str(rel.get('can_proceed','')).strip(),
+            str(rel.get('if_deferred','')).strip(),
+        ) for _, rel in all_relations]
+        if Counter(signatures).most_common(1)[0][1] * 4 >= len(signatures) * 3:
+            issues.append('Dependency explanations are overly repetitive; classify each relation by its own gate and evidence')
+
+    # Role labels do not establish one specific person's availability/capacity.
+    schedule = data.get('schedule') or {}
+    if final and schedule.get('tasks'):
+        resources = schedule.get('resource_constraints') or {}
+        resource_mode = resources.get('resource_mode')
+        if resource_mode not in ('scenario', 'confirmed'):
+            issues.append('schedule.resource_constraints.resource_mode must be scenario or confirmed')
+        if not isinstance(resources.get('assumption_source'),str) or not resources.get('assumption_source','').strip():
+            issues.append('schedule.resource_constraints.assumption_source is required')
+        if resource_mode == 'confirmed' and resources.get('user_confirmed') is not True:
+            issues.append('confirmed resource capacity requires explicit user confirmation')
+        if resource_mode == 'scenario':
+            for row in schedule.get('tasks',[]):
+                if row.get('status') == 'confirmed':
+                    issues.append(f"{row.get('action_id')}: scenario schedule must not be shown as confirmed")
+        # If one actor is modeled as serial, the published sequence and scheduled
+        # start order must agree. Group order is not a universal dependency gate;
+        # this check applies only when a serial plan is explicitly selected.
+        if resources.get('concurrency') == 1 and resources.get('sequence_policy') == 'follow_execution_sequence':
+            order = [aid for group in (data.get('execution_sequence') or []) for aid in group.get('action_ids',[])]
+            starts = {r.get('action_id'): r.get('start') for r in schedule.get('tasks',[])}
+            order = [aid for aid in order if aid in starts]
+            if any(starts[order[i]] > starts[order[i+1]] for i in range(len(order)-1)):
+                issues.append('schedule order disagrees with execution_sequence for single-resource serial plan')
+
     validate_dependencies(actions)
     validate_next_actions(data)
 
@@ -334,7 +423,7 @@ def _write_csv(data: dict[str, Any], path: Path) -> None:
     headers = [
         "action_id", "gap_ids", "title", "category", "as_is", "to_be", "delta",
         "improvement_ids", "owner_candidate", "owner_status", "priority", "priority_reason",
-        "start_status", "depends_on", "entry_conditions", "acceptance_criteria", "question_ids", "source_refs",
+        "start_status", "depends_on", "entry_conditions", "deliverables", "acceptance_criteria", "question_ids", "source_refs",
     ]
     with path.open("w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=headers, quoting=csv.QUOTE_MINIMAL)
@@ -365,6 +454,7 @@ def _write_csv(data: dict[str, Any], path: Path) -> None:
                 "start_status": action.get("start_status"),
                 "depends_on": _join(action.get("depends_on") or []),
                 "entry_conditions": _join(action.get("entry_conditions") or []),
+                "deliverables": _join(action.get("deliverables") if action.get("deliverables") is not None else ([action["deliverable"]] if action.get("deliverable") else [])),
                 "acceptance_criteria": _join(action.get("acceptance_criteria") or []),
                 "question_ids": _join(question_ids),
                 "source_refs": _as_text(source_refs),
@@ -373,6 +463,8 @@ def _write_csv(data: dict[str, Any], path: Path) -> None:
 
 
 def _md_list(values: Iterable[Any] | None) -> str:
+    if isinstance(values, str):
+        values = [values]
     values = list(values or [])
     return "\n".join(f"- {_as_text(v)}" for v in values) if values else "- 未確認"
 
@@ -424,7 +516,7 @@ def _write_markdown_report(data: dict[str, Any], path: Path) -> None:
         lines += [
             f"### {a.get('id')} {a.get('title')}",
             f"- 担当候補: {a.get('owner_candidate', '')} ({a.get('owner_status', 'unknown')})",
-            f"- 成果物: {a.get('deliverable', '')}",
+            f"- 成果物: {_join(a.get('deliverables') if a.get('deliverables') is not None else ([a['deliverable']] if a.get('deliverable') else []))}",
             "- 着手条件:", _md_list(a.get("entry_conditions")),
             "- 完了条件:", _md_list(a.get("acceptance_criteria")),
             "",
@@ -455,14 +547,18 @@ def _write_roadmap(data: dict[str, Any], path: Path) -> None:
         lines += [
             f"### 段階 {i}: {p.get('phase') or p.get('title') or ''}",
             f"- 対応: {_join(p.get('action_ids') or [])}",
-            "- 始める条件:", _md_list(p.get("entry_conditions")),
-            "- 次へ進む条件:", _md_list(p.get("exit_conditions")),
+            "- 始める条件:", _md_list(p.get("start_condition", p.get("entry_conditions"))),
+            "- 次へ進む条件:", _md_list(p.get("transition_condition", p.get("exit_conditions"))),
             "",
         ]
     schedule = data.get("schedule") or {}
     lines += ["## 日程", ""]
     if schedule.get("tasks"):
-        lines += [f"- 前提: {_as_text(schedule.get('basis'))}", ""]
+        constraints = schedule.get('resource_constraints') or {}
+        if constraints.get('resource_mode') == 'scenario':
+            lines += ['- **暫定試算**: 担当人数・稼働上限を仮定した日程で、確定予定ではありません。']
+        lines += [f"- 担当条件の根拠: {_as_text(constraints.get('assumption_source'))}",
+                  f"- 前提: {_as_text(schedule.get('basis'))}", ""]
         for row in schedule["tasks"]:
             lines.append(f"- {row.get('action_id')}: {row.get('start')} → {row.get('end')} ({row.get('status', 'proposed')})")
     else:
@@ -491,6 +587,21 @@ def _verify_outputs(data: dict[str, Any], paths: dict[str, Path], html_text: str
     if rendered_critical != critical_count:
         issues.append(f"Critical Gap card count mismatch analysis={critical_count} html={rendered_critical}")
 
+    # Check business-facing field fidelity, not only IDs and renderer hashes.
+    for phase in data.get('roadmap', []):
+        for field, fallback in (('start_condition','entry_conditions'),('transition_condition','exit_conditions')):
+            value = phase.get(field,phase.get(fallback))
+            values = value if isinstance(value,list) else ([value] if value else [])
+            for item in values:
+                if isinstance(item,str) and item.strip() and html.escape(natural(item),quote=True) not in html_text:
+                    issues.append(f"HTML roadmap is missing {field} value for {phase.get('phase',phase.get('title','unknown'))}")
+    for a in data.get('actions', []):
+        value = a.get('deliverables') if a.get('deliverables') is not None else a.get('deliverable')
+        values = value if isinstance(value,list) else ([value] if value else [])
+        for item in values:
+            if isinstance(item,str) and item.strip() and html.escape(natural(item),quote=True) not in html_text:
+                issues.append(f"HTML deliverables missing ACT {a.get('id')}")
+
     # CSV must contain every ACT exactly once.
     with paths["csv"].open("r", encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
@@ -504,6 +615,19 @@ def _verify_outputs(data: dict[str, Any], paths: dict[str, Path], html_text: str
     for identifier in sorted(gap_ids | act_ids | q_ids | na_ids):
         if identifier not in md and (identifier not in roadmap or identifier not in act_ids):
             issues.append(f"Markdown derivatives missing ID: {identifier}")
+    for phase in data.get('roadmap', []):
+        for field, fallback in (('start_condition','entry_conditions'),('transition_condition','exit_conditions')):
+            v = phase.get(field,phase.get(fallback))
+            values = v if isinstance(v,list) else ([v] if v else [])
+            for item in values:
+                if isinstance(item,str) and item.strip() and item not in roadmap:
+                    issues.append(f"Roadmap Markdown missing {field} value")
+    for act in data.get('actions',[]):
+        v = act.get('deliverables') if act.get('deliverables') is not None else act.get('deliverable')
+        values = v if isinstance(v,list) else ([v] if v else [])
+        for item in values:
+            if isinstance(item,str) and item.strip() and item not in md:
+                issues.append(f"Report Markdown missing deliverables for {act.get('id')}")
 
     return {"status": "pass" if not issues else "fail", "issues": issues}
 

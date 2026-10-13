@@ -30,9 +30,11 @@ def business_span(start, duration_business_days, extra_holidays=()):
     return {'start': work_dates[0], 'last_work_date': work_dates[-1], 'end': current.isoformat(),
             'duration_business_days': duration_business_days, 'work_dates': work_dates}
 
-def serial_schedule(actions, sequence, estimates, start, owner, extra_holidays=(), status='proposed'):
+def serial_schedule(actions, sequence, estimates, start, owner, extra_holidays=(), status='proposed', capacity_confirmation_source=None):
     """Only for an explicitly agreed single-owner, capacity-one plan, without wait time."""
-    if not owner: raise ValueError('担当者と同時作業上限1の確認が必要です。')
+    if not owner: raise ValueError('日程ケースに使う担当役割を指定してください。')
+    if status == 'confirmed' and not capacity_confirmation_source:
+        raise ValueError('確定日程には人数と同時実行上限の明示的な了承出典が必要です。')
     by_id = validate_dependencies(actions)
     if len(by_id) != len(actions) or len(sequence) != len(set(sequence)) or set(sequence) != set(by_id):
         raise ValueError('実行順に全対応を一回ずつ指定してください。')
@@ -48,7 +50,11 @@ def serial_schedule(actions, sequence, estimates, start, owner, extra_holidays=(
     return {'basis': '土日と日本の祝日・休日を除く営業日。確認した作業別見積と実行順に従い、同じ担当者が一件ずつ実施。承認待ちは別途確認。',
             'calendar': {'mode': 'japan_business_days', 'source': SOURCE, 'verified_on': VERIFIED_ON,
                          'verified_years': sorted(HOLIDAYS), 'extra_holidays': list(extra_holidays)},
-            'resource_constraints': {'owner': owner, 'concurrency': 1}, 'tasks': tasks}
+            'resource_constraints': {'owner': owner, 'concurrency': 1,
+                                     'resource_mode': 'confirmed' if capacity_confirmation_source else 'scenario',
+                                     'user_confirmed': bool(capacity_confirmation_source),
+                                     'assumption_source': capacity_confirmation_source or '仮に1人・同時作業1件とした試算。利用者の人数・稼働上限の承認ではない。',
+                                     'sequence_policy': 'follow_execution_sequence'}, 'tasks': tasks}
 
 def schedule_diagram(data, actions, esc, label, links, table):
     schedule = data.get('schedule') or {}; rows = schedule.get('tasks', [])
@@ -71,6 +77,10 @@ def schedule_diagram(data, actions, esc, label, links, table):
         for dep in schedule_predecessors(by_id[i]):
             if dep not in dated or dated[dep][1] > start: raise ValueError('先行作業と日程が矛盾します: ' + i)
     resources = schedule.get('resource_constraints') or {}
+    if resources.get('resource_mode') == 'confirmed' and resources.get('user_confirmed') is not True:
+        raise ValueError('担当人数・同時実行上限の確定根拠がありません。')
+    if resources.get('resource_mode') == 'scenario' and any(r.get('status') == 'confirmed' for _, _, r in dated.values()):
+        raise ValueError('仮定したリソース制約による日程を確定済みと表示できません。')
     if resources.get('concurrency') == 1:
         for i, (s, e, r) in dated.items():
             for j, (s2, e2, r2) in dated.items():
@@ -78,7 +88,10 @@ def schedule_diagram(data, actions, esc, label, links, table):
                     raise ValueError('同じ担当者の作業が重複しています: ' + i + '/' + j)
     low = min(v[0] for v in dated.values()); high = max(v[1] for v in dated.values())
     span = max((high-low).days, 1); width = 1120; height = 65 + 40*len(rows)
-    out = ['<h3>営業日で整理した日程案</h3><p>' + esc(schedule.get('basis')) + '</p>',
+    resource_note = ('仮定のリソース構成による試算であり、確定日程ではありません。' if resources.get('resource_mode') == 'scenario' else '確認されたリソース前提による日程案。')
+    basis = schedule.get('basis') or {}
+    basis_description = (' / '.join(str(k)+': '+str(v) for k,v in basis.items()) if isinstance(basis,dict) else str(basis))
+    out = ['<h3>営業日で整理した日程案</h3><p><strong>' + esc(resource_note) + '</strong> ' + esc(resources.get('assumption_source') or '') + '</p><p>' + esc(basis_description) + '</p>',
            '<p class="muted">横軸は日付です。灰色は土日・祝日・追加の休業日で、色の帯が作業日です。完了日は最後の作業日、後続開始可能日はその次の営業日です。帯は進捗率ではありません。</p>',
            '<p>祝日の出典: <a href="' + SOURCE + '">内閣府の祝日・休日一覧</a>（確認日 ' + VERIFIED_ON + '、2026・2027年）。会社独自の休業日: ' + esc('、'.join(extra) or '追加指定なし') + '</p>',
            f'<div class="diagram"><svg role="img" aria-labelledby="schedule-title" width="{width}" height="{height}" viewBox="0 0 {width} {height}"><title id="schedule-title">営業日と休業日を区別した日程案</title>']

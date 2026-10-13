@@ -96,6 +96,14 @@ final workflowは次を出力する。
 
 ## 分析品質の必須条件
 
+## 計画内容の妥当性と成果物の整合（v3後続改善）
+
+正式ゲートは、GAP/ACTごとに**具体的な優先度理由**を要求し、全行で理由文が再利用される場合や、依存の条件・根拠が一律の定型文である場合はfailにする。調査と実装の複合作業は適切に分割し、分割しないなら固有の `stage_split_rationale` を記録する。根拠のないrequired/start依存を自動生成して通過させない。要確認の依存があるまま日程を確定しない。
+
+日程の `resource_constraints.resource_mode` は `scenario` または `confirmed`。未確認の担当人数・同時上限を仮定した場合は `scenario` と明記して `tasks[].status=proposed` にする。`confirmed` には人数・稼働制約の利用者確認出典が必要。優先度・実行順・担当キャパシティは別の判断として扱う。
+
+`actions[].deliverables` (配列)を優先し、旧 `deliverable` (単数)も読める。`roadmap[].start_condition` / `transition_condition` を優先し、旧 `entry_conditions` / `exit_conditions` にも対応する。表示の際に存在する値を「未確認」に置き換えない。HTML/Markdownに正本の値が落ちた場合、派生チェックをfailにする。正式検証は**技術・構造・トレーサビリティの判定**であり、見積・リソース配賦・業務的な実行可能性への承認ではない。
+
 固定のGap件数・ACT件数・質問件数は要求しない。入力内容に応じて件数は変わる。一方、詳細レポートに必要な情報モデルは省略しない。
 
 - `scope_summary` で今回扱う範囲、扱わない範囲、後続、外部確認、暫定事項を区別する。

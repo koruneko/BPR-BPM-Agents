@@ -1,5 +1,14 @@
 # 出力契約 v1.6
 
+## v3後続改善: 業務計画の品質と表示キー
+
+- GapとACTの各 `priority_reason` は、その項目の影響、リスク、利用者の優先軸、実現性および後回しの影響に照らした**項目固有の根拠**。同じ一般論のコピーではformalを通さない。優先度は重要性の判定であり、そのまま着手順ではない。
+- `actions[].deliverables` は具体的な成果物の配列（旧 `deliverable` 単数も読取互換）。調査・業務判断・設計・実装・結合/受入・導入が異なる担当/依存/成果の場合は別ACTとする。混在させる場合は `stage_split_rationale` に具体的根拠。
+- 各 `dependency_relations` は着手・確定・実施のうち**本当に必要な段階**と入力成果を具体化し、一般論の反復や業務フローの順序を自動流用しない。必須を推測しない。真に必要なら全件requiredでもよい。
+- `roadmap[].start_condition` と `transition_condition` を表示する（旧キー `entry_conditions` / `exit_conditions` は読取互換）。HTML・Markdown・ロードマップの派生に実データのフィールド値が含まれることを検証する。
+- 日程を設ける場合 `schedule.resource_constraints` に `resource_mode` (`scenario`/`confirmed`), `user_confirmed` (bool), `assumption_source` (具体的な説明/回答出典), `concurrency` と必要に応じて `sequence_policy=follow_execution_sequence` を記録。人数・並行実施上限は担当役割名から推測しない。scenario の各 `schedule.tasks[].status` は `proposed` とし、「暫定試算」と表示する。confirmedには本人による明示的なリソース制約の確認を必須とする。
+- 新規追加するACTの関連IDはGAP/NA/roadmap/execution_sequenceへ追記し、必ず全ACTを正確に一回列挙。実際の分析の承認なしに既存原本の採否は変更しない。
+
 ## Gapの理解と次の行動
 
 `next_actions` は id/title/kind/priority/reason/first_step/consult_with/owner_status/expected_result/related_action_ids/question_ids/depends_on/status/source の配列。kindは確認・決定・準備。depends_onはNext Action ID、related_action_idsはACT-ID、question_idsはQ-ID。status=confirmedは行動内容への合意であり実施完了ではない。最初の一歩と得たい結果を具体化し、担当未定なら相談する役割と候補確認の行動を残す。
@@ -27,7 +36,7 @@ JSONはUTF-8。項目の意味を保ち、未知は null または明示状態�
 - `actions`: 下記課題
 - `questions`: 下記質問
 - `coverage`: ノード/フロー対応数、IMP別採否とGap/課題または維持理由、全未確認事項の引継ぎ/解消対応。`source_question_lineage` と `improvement_lineage` を含む。
-- `roadmap`: 段階、action_ids、entry_conditions、exit_conditions、提案の根拠
+- `roadmap`: 段階、action_ids、start_condition、transition_condition（旧entry_conditions/exit_conditions読取互換）、提案の根拠
 - `change_log`: 改版した場合に前版/変更/理由/影響/出典
 - `verification`: 実施した成果物チェック、未実施の業務テストと限界
 
