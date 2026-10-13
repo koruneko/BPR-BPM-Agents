@@ -1,56 +1,72 @@
 # To-Be Gap Analyst Agent
 
-Microsoft 365 Copilot Agent Builder の Skills 機能を利用して、BPM Agent で整理した現在の業務と BPR Agent で設計した変更後の業務を比較し、Gapと次の確認・決定・準備を整理するエージェントです。
+Microsoft 365 Copilot Agent Builder 向けに、BPM Agent の As-Is と BPR Agent の採用済み To-Be を比較し、業務上のGapと実行可能な Next Action を整理するエージェントです。
 
-## Overview
+## 現在の実装
 
-To-Be Gap Analyst Agent は、As-Is と採用された To-Be の差分を追跡し、業務・システム・データ・人とスキル・役割・ルール・管理・測定の観点から Gap を整理します。
+本ディレクトリは **v3 workflow構成**です。`gap-planning-current` は廃止し、5つのSkillを使用します。
 
-Gap を列挙するだけではなく、利用者との対話を通じて、優先する Next Action、最初の一歩、相談する役割、得たい結果、前後関係、持ち越す確認事項を具体化します。必要な場合は、日本の営業日を考慮した日程も追加できます。
-
-## Flow
-
-1. BPM の `process.yaml` と BPR の `to-be-process.yaml`、`improvement-analysis.yaml`、`improvement-decisions.yaml` を照合
-2. As-Is / To-Be の差分、影響、根拠、未確認事項を Gap として整理
-3. 優先する Next Action と、最初の一歩・相談相手・得たい結果・前後関係を対話で整理
-4. 必要に応じて営業日ベースの日程を追加
-5. Gap分析データ、一覧、詳細レポート、ロードマップ、依存関係図を生成
-
-全ての未確認事項の解消、担当者の確定、実見積、詳細日程、実装、本番移行までをエージェントの完了条件にはしません。未確定事項は、次に誰と何を確認するかへつなげます。
-
-## Recommended Inputs
-
-新規の Gap 分析では、次の4ファイルを主要入力として使用します。
-
-- BPM Agent の `process.yaml`
-- BPR Agent の `to-be-process.yaml`
-- BPR Agent の `improvement-analysis.yaml`
-- BPR Agent の `improvement-decisions.yaml`
-
-BPR 側の資料だけでも分析できますが、As-Is がない場合は現在との差分を暫定扱いにします。既存の `gap-analysis.json` は、継続相談や改版に利用できます。
-
-## Contents
-
-| Path | Role |
+| Skill | 役割 |
 |---|---|
-| [agent-instructions.md](./agent-instructions.md) | To-Be Gap Analyst Agent 全体の Instructions |
-| [bpr-gap-analysis](./bpr-gap-analysis/) | As-Is / To-Be の比較、Gap・実施課題・根拠・未決事項の分析 |
-| [gap-planning-current](./gap-planning-current/) | Next Action、優先度、順序、前後関係の対話整理 |
-| [gap-delivery](./gap-delivery/) | Gap分析データからレポート・一覧・ロードマップを生成 |
-| [gap-report-format](./gap-report-format/) | レポートの日本語表現・表・配色・表示処理 |
-| [gap-business-calendar](./gap-business-calendar/) | 日本の営業日を使った任意の日程計算 |
+| [bpr-gap-analysis](./bpr-gap-analysis/) | As-Is / To-Beの比較、根拠・未決事項・プロセス対応表 |
+| [gap-planning](./gap-planning/) | 優先度、Next Action、依存・実行順の整理 |
+| [gap-business-calendar](./gap-business-calendar/) | 日本の祝日・営業日日程の計算 |
+| [gap-delivery](./gap-delivery/) | 原本索引・検証ゲート・HTML/CSV/Markdown/ZIPの一括生成 |
+| [gap-report-format](./gap-report-format/) | HTML表示・レポートの形式と日本語表現 |
 
-各 Skill の詳細な指示や実装は、それぞれのディレクトリ内の `SKILL.md`、`references/`、`scripts/` を参照してください。
+Agent Instructionsは [agent-instructions.md](./agent-instructions.md) です。
 
-## Package
+## 標準ワークフロー
 
-Microsoft 365 Copilot Agent Builder へのインポートには、リポジトリ直下の [To-Be Gap Analyst Agent.zip](../To-Be%20Gap%20Analyst%20Agent.zip) を利用してください。
+`gap-delivery/scripts/gap_workflow.py` が正式な統合入口です。
 
-## Relationship with BPM / BPR Agents
+1. **prepare**：主要原本4ファイル（`process.yaml`、`to-be-process.yaml`、`improvement-analysis.yaml`、`improvement-decisions.yaml`）から、`source-pack.txt`・`source-index.json`・`gap-analysis.template.json`・`workflow-preparation.json` を生成します。
+2. **分析・対話**：As-Is / To-Beの意味の差分、Gap・ACT・Q・NA、依存条件、相談役割、未解決事項を整理してテンプレートを改版します。全参加者・ノード・フロー・改善IDと原質問の原文出典を追跡します。
+3. **calendar（任意）**：営業日日程を希望する場合、登録スクリプトで計算します。
+4. **draft（任意）**：進行中の成果物を暫定として生成できます。正式検証済みとは表現しません。
+5. **final**：`--pack` を指定して原本照合、分析スキーマ、依存・ID、原文系譜、HTML再生成一致を検証します。`overall_status=pass` かつ `formal_verified=true` の場合のみ正式ZIPを生成します。
 
-このエージェントは BPM Agent と BPR Agent の後工程を想定しています。
+利用者が今回の整理・直近の行動案を了承した場合、Agentはレポート作成依頼を待たず、最終生成へ進む設計です。実業務への導入承認、未確認の業務質問の全解決、実装・受入・移行はエージェントの対話完了条件ではありません。
 
-- [BPM Agent の詳細](../bpm-agent/)
-- [BPR Agent の詳細](../bpr-agent/)
+### CLI実行例
 
-BPM Agent で現在の業務を構造化し、BPR Agent で採用した改善案を反映した To-Be を設計した後、その差分を実行可能な確認・決定・準備へつなげます。
+```bash
+python gap-delivery/scripts/gap_workflow.py prepare \
+  --source process.yaml \
+  --source to-be-process.yaml \
+  --source improvement-analysis.yaml \
+  --source improvement-decisions.yaml \
+  --output-dir ./work
+
+# 出力された gap-analysis.template.json を原本と対話結果に基づいて更新。
+# 以下は、更新・検証済みの gap-analysis.json を用意した後に実行します。
+python gap-delivery/scripts/gap_workflow.py final \
+  --analysis ./work/gap-analysis.json \
+  --pack ./work/source-pack.txt \
+  --output-dir ./work/delivery \
+  --report-view full \
+  --zip ./work/gap-analysis-final.zip
+```
+
+生成失敗時は原因を確認し、原本・分析データ・依存条件を修正したうえで再実行してください。見積や未確認事項を推測で埋めないでください。
+
+## ダウンロードとソース
+
+- [Agent Builder向けAgentパッケージ](../To-Be%20Gap%20Analyst%20Agent.zip)
+- [Agent Instructions](./agent-instructions.md)
+- [v3修正・検証記録](./REBUILD_NOTES_v3.md)
+
+`SKILL.md` と `scripts/` は本ディレクトリに展開されています。GitHub上のファイルを確認・レビューできます。
+
+## 入力の基準
+
+主要入力はBPMの `process.yaml` とBPRの `to-be-process.yaml`・`improvement-analysis.yaml`・`improvement-decisions.yaml` です。レビューや追加資料は補助入力として利用します。資料の不足を黙って補完したり、採否を独自に変更したりしません。
+
+## 検証の限界
+
+v3はローカルのスクリプトテストで `prepare` と `final` の正常系、必須入力不足や不正内部priorityの異常系を確認しています。**Agent Builderのプレビュー実行環境で複数Skillが常に正しく呼び出されることを保証するものではありません。** 計画やGapの意味上の妥当性は、元資料と担当者の判断によるレビューも必要です。
+
+## 他Agentとの関係
+
+- [BPM Agent](../bpm-agent/)
+- [BPR Agent](../bpr-agent/)
