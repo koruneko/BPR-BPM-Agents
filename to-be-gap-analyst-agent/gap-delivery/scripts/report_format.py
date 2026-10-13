@@ -14,6 +14,7 @@ def esc(value): return html.escape(natural(value),quote=True)
 def label(value): return esc(LABELS.get(str(value),value))
 def items(values):
     if not values: return '<p class="muted">記載なし</p>'
+    if isinstance(values, str): values = [values]
     return '<ul>'+''.join('<li>'+esc(v)+'</li>' for v in values)+'</ul>'
 def badge(value):
     tone={'critical':'red','high':'amber','resolved':'green','analysis_complete':'green','blocked':'amber'}.get(str(value),'gray')

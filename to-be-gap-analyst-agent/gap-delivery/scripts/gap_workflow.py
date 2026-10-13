@@ -328,21 +328,32 @@ def verify_preparation(args: argparse.Namespace) -> None:
 
 def run_delivery(args: argparse.Namespace, mode: str) -> int:
     import generate_delivery
-    if mode=="final":
-        # Do not leave a stale formal ZIP visible even when preflight fails.
-        out=Path(args.output_dir).resolve()
-        out.mkdir(parents=True,exist_ok=True)
-        candidates=[out/"gap-analysis-delivery.zip"]
-        if args.zip_path:
-            candidates.append(Path(args.zip_path).resolve())
-        for item in candidates:
-            if item.exists(): item.unlink()
-        verify_preparation(args)
+    # Check all cleanup paths, including custom ZIP and inputs, before unlinking
+    # anything. The generator repeats this guard for direct draft callers.
     options=argparse.Namespace(
         mode=mode, analysis=args.analysis, output_dir=args.output_dir,
-        pack=args.pack, title=args.title, report_view=args.report_view,
-        zip_path=args.zip_path,
+        pack=args.pack, preparation=getattr(args, "preparation", None),
+        title=args.title, report_view=args.report_view, zip_path=args.zip_path,
     )
+    out, zip_path = generate_delivery.validate_delivery_paths(options)
+    if mode=="final":
+        out.mkdir(parents=True, exist_ok=True)
+        # Invalidating previous "pass" diagnostics is essential even if the
+        # prepare-manifest preflight fails before the generator is called.
+        for artifact in generate_delivery.generated_artifacts(out):
+            if artifact.is_file():
+                artifact.unlink()
+        shutil.rmtree(out / "scripts", ignore_errors=True)
+        if zip_path.is_file():
+            zip_path.unlink()
+        try:
+            verify_preparation(args)
+        except Exception as exc:
+            (out / "verification-manifest.json").write_text(
+                json.dumps({"overall_status": "fail", "formal_verified": False,
+                            "mode": "final", "error": str(exc)}, ensure_ascii=False, indent=2),
+                encoding="utf-8")
+            raise
     return generate_delivery.generate(options)
 
 

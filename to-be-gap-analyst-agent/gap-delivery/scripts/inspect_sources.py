@@ -103,13 +103,19 @@ def _fallback_decisions(text):
 
 def _fallback_to_be(text):
     # Indentation-sensitive subset matching BPR's generated process.bpr YAML.
-    process=re.search(r'^(?:process|metadata):\s*\n(.*?)(?=^[A-Za-z_][\w-]*:|\Z)',text,re.M|re.S)
-    if not process:
-        raise ValueError('To-Be requires a process section')
-    bpr=re.search(r'^  bpr:\s*\n(.*?)(?=^  [A-Za-z_][\w-]*:|\Z)',process.group(1),re.M|re.S)
-    if not bpr:
-        raise ValueError('To-Be requires process.bpr section')
-    content=bpr.group(1)
+    # A standard BPR To-Be places adoption scope in top-level metadata.bpr;
+    # some supported sources use process.bpr. Check both independently.
+    content = None
+    for container_name in ('process', 'metadata'):
+        section = re.search(r'^'+container_name+r':\s*\n(.*?)(?=^[A-Za-z_][\w-]*:|\Z)', text, re.M | re.S)
+        if section is None:
+            continue
+        bpr = re.search(r'^  bpr:\s*\n(.*?)(?=^  [A-Za-z_][\w-]*:|\Z)', section.group(1), re.M | re.S)
+        if bpr is not None:
+            content = bpr.group(1)
+            break
+    if content is None:
+        raise ValueError('To-Be requires process.bpr or metadata.bpr section')
     result={}; current_key=None; current_row=None
     for line in content.splitlines():
         key=re.fullmatch(r'    (applied_improvements|conditional_improvements|change_log):\s*(\[\])?\s*',line)
@@ -146,7 +152,7 @@ def _fallback_to_be(text):
         # Unknown fields may occur inside change_log entries: they are evidence,
         # not adoption controls. Only direct declaration and action/condition are read.
     if not all(k in result for k in ('applied_improvements','conditional_improvements','change_log')):
-        raise ValueError('Incomplete To-Be process.bpr adoption metadata without PyYAML')
+        raise ValueError('Incomplete To-Be adoption metadata without PyYAML')
     return {'process':{'bpr':result}}
 
 

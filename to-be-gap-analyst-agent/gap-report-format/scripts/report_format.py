@@ -14,6 +14,7 @@ def esc(value): return html.escape(natural(value),quote=True)
 def label(value): return esc(LABELS.get(str(value),value))
 def items(values):
     if not values: return '<p class="muted">記載なし</p>'
+    if isinstance(values, str): values = [values]
     return '<ul>'+''.join('<li>'+esc(v)+'</li>' for v in values)+'</ul>'
 def badge(value):
     tone={'critical':'red','high':'amber','resolved':'green','analysis_complete':'green','blocked':'amber'}.get(str(value),'gray')
@@ -72,4 +73,3 @@ def analysis_context_section(data):
         rows.append([title,esc(item.get('status') or '未確認'),esc(item.get('summary') or '資料の記載範囲と不足を確認する。該当しない場合も理由を残す。'),links(item.get('gap_ids',[]))+links(item.get('question_ids',[]))+sources(item.get('source_refs',[]))])
     out.append('<h3>分析で確認した観点</h3>'+table(['観点','確認状況','整理したこと・不足','関連項目・根拠'],rows))
     return ''.join(out)+'</section>'
-

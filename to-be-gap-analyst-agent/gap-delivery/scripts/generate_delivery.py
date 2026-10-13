@@ -93,10 +93,14 @@ def _is_placeholder(value: Any) -> bool:
 def _valid_source_refs(value: Any) -> bool:
     if not isinstance(value, list) or not value:
         return False
+    valid_kinds = {"documented", "undocumented", "inference", "user_confirmation"}
     for row in value:
         if not isinstance(row, dict):
             return False
-        if not row.get("file") or not row.get("field") or not row.get("evidence_kind"):
+        if any(not isinstance(row.get(key), str) or not row[key].strip()
+               for key in ("file", "field", "note")):
+            return False
+        if row.get("evidence_kind") not in valid_kinds:
             return False
     return True
 
@@ -519,7 +523,46 @@ def cli_main() -> int:
     return generate(args)
 
 
+GENERATED_NAMES = (
+    "gap-analysis.json", "gap-register.csv", "gap-report.md", "gap-report.html",
+    "implementation-roadmap.md", "source-index.json", "source-verification.json",
+    "verification-manifest.json", "gap-analysis-delivery.zip", "gap-analysis-DRAFT.zip",
+)
+
+
+def validate_delivery_paths(args: argparse.Namespace) -> tuple[Path, Path]:
+    """Reject destructive collisions before any cleanup, even on failed final runs."""
+    out_dir = Path(args.output_dir).resolve()
+    zip_path = (Path(args.zip_path).resolve() if args.zip_path else
+                out_dir / ("gap-analysis-delivery.zip" if args.mode == "final" else "gap-analysis-DRAFT.zip"))
+    inputs = [Path(args.analysis).resolve()]
+    for key in ("pack", "preparation"):
+        value = getattr(args, key, None)
+        if value:
+            inputs.append(Path(value).resolve())
+    generated = {out_dir / name for name in GENERATED_NAMES}
+    default_zip = out_dir / ("gap-analysis-delivery.zip" if args.mode == "final" else "gap-analysis-DRAFT.zip")
+    if zip_path in generated and zip_path != default_zip:
+        raise ValueError("Output ZIP must not overwrite another generated artifact")
+    generated.add(zip_path)
+    scripts_dir = out_dir / "scripts"
+    if out_dir.exists() and not out_dir.is_dir():
+        raise ValueError("Output directory points to a non-directory path")
+    if zip_path.exists() and not zip_path.is_file():
+        raise ValueError("Output ZIP destination is not a file")
+    if any(src in generated or src == scripts_dir or scripts_dir in src.parents for src in inputs):
+        raise ValueError("Output destination overlaps a workflow input; no files removed")
+    if zip_path == out_dir or zip_path == scripts_dir or out_dir in zip_path.parents and zip_path.name == "scripts":
+        raise ValueError("Output ZIP path cannot be a generated directory")
+    return out_dir, zip_path
+
+
+def generated_artifacts(out_dir: Path) -> list[Path]:
+    return [out_dir / name for name in GENERATED_NAMES]
+
+
 def generate(args: argparse.Namespace) -> int:
+    out_dir, zip_path = validate_delivery_paths(args)
     analysis_path = Path(args.analysis).resolve()
     out_dir = Path(args.output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -527,15 +570,11 @@ def generate(args: argparse.Namespace) -> int:
 
     # Remove stale generated artifacts first so a failed final run cannot leave
     # an older report or ZIP that looks current. Diagnostics may be recreated.
-    for name in ("gap-analysis.json", "gap-register.csv", "gap-report.md", "gap-report.html",
-                 "implementation-roadmap.md", "source-index.json", "source-verification.json",
-                 "verification-manifest.json", "gap-analysis-delivery.zip", "gap-analysis-DRAFT.zip"):
-        target = out_dir / name
+    for target in generated_artifacts(out_dir):
         if target.exists():
             target.unlink()
     shutil.rmtree(out_dir / "scripts", ignore_errors=True)
     # A custom ZIP may be outside output-dir and survive an earlier failed run.
-    zip_path = Path(args.zip_path).resolve() if args.zip_path else out_dir / ("gap-analysis-delivery.zip" if args.mode == "final" else "gap-analysis-DRAFT.zip")
     if zip_path.exists():
         zip_path.unlink()
 
