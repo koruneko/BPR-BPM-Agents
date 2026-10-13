@@ -1,0 +1,12 @@
+# Local packages and generated artifacts (not distributable source)
+/dist/
+/work/
+/gap-work/
+/delivery-output/
+/output/
+
+# Common local credential files; always review staged files before push
+**/.env
+**/.env.*
+*.pem
+*.key
