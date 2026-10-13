@@ -42,7 +42,7 @@ Formal generation now fails and does not create the final ZIP when, among other 
 - The analysis was not derived from `gap_workflow.py@3 prepare`.
 - Prepared source-pack or source-index hashes do not match.
 - Dialogue is not completed or confirmation source is missing.
-- GAP / ACT / Q / Next Action sets are incomplete for final delivery.
+- GAP / ACT / Next Action sets are incomplete (source Q occurrence coverage remains mandatory) for final delivery.
 - Internal priority values are not `critical/high/medium/low`.
 - Analysis dimensions are placeholders or overly repetitive.
 - Gap decision-context fields are missing/thin or heavily templated across all gaps.
@@ -103,3 +103,11 @@ These are local script/package tests. They do not prove how consistently the pre
 - The preparation SHA-256 values are reproducibility/consistency checks, **not** protection against a malicious local writer who controls all inputs; an adversarial attestation would require signed trusted state outside the workspace.
 - Regression tests for duplicate source markers, decision-source mismatches, invalid input validation, workflow bypass, prior custom ZIP cleanup, and preparation binding are under `tests/`.
 - These changes were tested locally; end-to-end Copilot Agent Builder runtime execution and human semantic business review remain required.
+
+## PR #4 Copilot review follow-up — second pass (2026-10-14)
+
+- Artifact ZIP is restricted to the manifest-registered generated files and `verification-manifest.json`. Unrelated files from a reused output directory cannot be packaged.
+- Empty `questions: []` is permitted in formal mode when no original question occurrences or analysis questions exist; source-question occurrence validation remains mandatory when questions exist.
+- The README `final` CLI example now includes the required `--preparation` argument.
+- Corrected duplicated Japanese punctuation in the output contract.
+- Added dedicated regression tests including a successful zero-question formal run and ZIP pollution checks on reused output directories.

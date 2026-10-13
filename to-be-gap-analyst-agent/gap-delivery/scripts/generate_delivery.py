@@ -132,8 +132,10 @@ def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, An
     question_ids = _ids(questions, "Q")
     next_ids = _ids(next_actions, "NA") if next_actions else set()
 
-    if final and (not gaps or not actions or not questions or not next_actions):
-        issues.append("final analysis requires non-empty GAP, ACT, Q and Next Action sets")
+    # Questions may legitimately be absent when the original materials contain
+    # no open questions and the analysis does not discover any new ones.
+    if final and (not gaps or not actions or not next_actions):
+        issues.append("final analysis requires non-empty GAP, ACT and Next Action sets")
     if final and not data.get("roadmap"):
         issues.append("final analysis requires roadmap")
     if final and (data.get("input_validation") or {}).get("status") != "pass":
@@ -657,10 +659,18 @@ def generate(args: argparse.Namespace) -> int:
     manifest_path = out_dir / "verification-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # Explicit, verified artifact allowlist: never archive arbitrary contents of
+    # a reused output directory (such as input YAML, secrets, or stale reports).
+    payloads = [*files_for_hash, manifest_path]
+    if len({p.resolve() for p in payloads}) != len(payloads):
+        raise ValueError("Output archive payload has duplicate file destinations")
+    if zip_path.resolve() in {p.resolve() for p in payloads}:
+        raise ValueError("Output ZIP must not replace a generated artifact")
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        for pth in sorted(out_dir.rglob("*")):
-            if pth.is_file() and pth.resolve() != zip_path.resolve():
-                z.write(pth, pth.relative_to(out_dir).as_posix())
+        for pth in sorted(payloads, key=lambda p: p.relative_to(out_dir).as_posix()):
+            if not pth.is_file() or not pth.resolve().is_relative_to(out_dir.resolve()):
+                raise ValueError(f"Expected generated artifact missing/outside output directory: {pth}")
+            z.write(pth, pth.relative_to(out_dir).as_posix())
 
     print(json.dumps({
         "status": manifest["overall_status"],

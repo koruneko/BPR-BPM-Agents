@@ -10,7 +10,7 @@
 
 JSONはUTF-8。項目の意味を保ち、未知は null または明示状態とする。資料由来のIDは原文通り保持する。
 
-正式成果物では `gap_workflow.py prepare` から始まり、同じsource packとtemplate系統を `gap_workflow.py final` まで維持する。finalは原文パックとprepareが生成したworkflow-preparation.json（原本/index/templateのハッシュ照合）を必須とし、、`verification-manifest.json` が `overall_status=pass` かつ `formal_verified=true` の場合だけ正式版とする。
+正式成果物では `gap_workflow.py prepare` から始まり、同じsource packとtemplate系統を `gap_workflow.py final` まで維持する。finalは原文パックとprepareが生成したworkflow-preparation.json（原本/index/templateのハッシュ照合）を必須とし、`verification-manifest.json` が `overall_status=pass` かつ `formal_verified=true` の場合だけ正式版とする。
 
 ## 最上位
 
@@ -94,3 +94,5 @@ gaps[].decision_contextにimpact/root_cause/preserve/target_outcome/response_str
 scope_summaryはincluded/excluded/later/external/temporaryの文字列。実業務の変更範囲と今回の分析・対話範囲を明示して区別する。分析範囲への了承だけで業務スコープを承認済みにしない。
 
 analysis_dimensionsはprocess/technology/data/people/organization/rules/control/measurementをキーとし、status（日本語の確認状況）、summary、gap_ids、question_ids、source_refsを保持。該当・不足・対象外の理由を示し、観点不足だけでGapを水増ししない。必要な判断だけ対話で確認し、全欄の確定や費用対効果の算定を対話完了条件にはしない。
+
+正式検証では、原本にも分析上にも未確認事項が存在しない場合の `questions: []` を許容する。原本に質問がある場合は、すべての出現箇所のQ-ID系譜と原文照合を省略できない。Gap・ACT・Next Actionは正式分析で必要とするが、件数の上限や固定のQ件数は設けない。

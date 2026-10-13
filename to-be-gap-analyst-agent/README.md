@@ -43,6 +43,7 @@ python gap-delivery/scripts/gap_workflow.py prepare \
 python gap-delivery/scripts/gap_workflow.py final \
   --analysis ./work/gap-analysis.json \
   --pack ./work/source-pack.txt \
+  --preparation ./work/workflow-preparation.json \
   --output-dir ./work/delivery \
   --report-view full \
   --zip ./work/gap-analysis-final.zip
