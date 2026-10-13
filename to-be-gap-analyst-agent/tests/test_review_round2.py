@@ -58,8 +58,6 @@ class PR4Round2(unittest.TestCase):
                 m=json.loads(z.read('verification-manifest.json'))
                 self.assertEqual(names,set(m['artifacts'])|{'verification-manifest.json'})
 
-if __name__=='__main__':unittest.main(verbosity=2)
-
 # A strictly zero-Q scenario must be able to traverse the *entire* final gate.
 def _test_complete_final_without_questions(self):
     with tempfile.TemporaryDirectory() as t:
@@ -101,3 +99,5 @@ def _test_complete_final_without_questions(self):
             self.assertNotIn('old-analysis.json',z.namelist())
             self.assertEqual(set(z.namelist()),set(m['artifacts']) | {'verification-manifest.json'})
 PR4Round2.test_complete_final_without_questions=_test_complete_final_without_questions
+
+if __name__=='__main__': unittest.main(verbosity=2)
