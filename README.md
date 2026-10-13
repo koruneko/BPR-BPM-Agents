@@ -1,68 +1,104 @@
 # BPR / BPM Agents
 
-Microsoft 365 Copilot Agent Builder の Skills 機能を利用した、業務プロセスの可視化・分析・改善を支援するエージェントです。
+Microsoft 365 Copilotで、**現在の業務を可視化する → 改善後の業務を設計する → 変更点から次の行動を決める**、という3つの作業を支援するAgentのサンプル集です。各Agentは単独でも利用できます。
 
-## Agents
+## どのAgentを使う？
 
-### BPM Agent
+| Agent | やりたいこと | 主な入力 | 主な成果物 |
+|---|---|---|---|
+| **[BPM Agent](./bpm-agent/)** | 現在の業務（As-Is）をヒアリングしてフローにする | 業務の説明 | `process.yaml`、BPMN、PlantUML、HTML |
+| **[BPR Agent](./bpr-agent/)** | 業務課題と改善案を整理し、採用した改善からTo-Beを設計する | BPMの `process.yaml` | 改善分析・採否のYAML、`to-be-process.yaml`、レポート、業務フロー |
+| **[To-Be Gap Analyst Agent](./to-be-gap-analyst-agent/)** | As-IsとTo-Beの差から、誰と何を確認・決定・準備するか整理する | BPMとBPRの主要4ファイル | Gap一覧、Next Action、依存関係図、詳細レポート |
 
-ユーザーとの対話から業務プロセスを整理し、構造化します。
+### 使い方の例
 
-主な処理:
+```text
+[BPM Agent]
+立替経費の申請から振込までを可視化したいです。担当者と処理の流れを説明するので整理してください。
 
-- 担当者、処理、条件分岐、差し戻し、例外、並行処理、利用システム、入出力を整理
-- `process.yaml` を業務プロセスの基準定義として生成
-- 構造・参照・Gateway・到達性・入出力などをレビュー
-- 検証済み YAML から BPMN 2.0 XML、PlantUML、HTML を生成
+[BPR Agent]
+BPM Agentで作成したprocess.yamlを使い、課題と改善案を検討してください。
+改善案を確認して採用するものを選んだ後、To-Beの業務フローを作成したいです。
 
-- [BPM Agent のソースと詳細](./bpm-agent/)
-- [BPM Agent.zip](./BPM%20Agent.zip)
+[To-Be Gap Analyst Agent]
+As-Isのprocess.yamlと、BPRのto-be-process.yaml、improvement-analysis.yaml、
+improvement-decisions.yamlを比較してください。変更点と、最初に誰と何を確認すべきか整理したいです。
+```
 
-### BPR Agent
+## 利用を開始する方法
 
-As-Is 業務プロセスをもとに課題と改善案を分析し、ユーザーが採用した改善案から To-Be 業務プロセスを設計します。
+**Agent全体のZIP**と**Skill単体のZIP**は用途が異なります。利用環境に合わせてどちらかの方法を選んでください。
 
-主な処理:
+### 方法A：Agentパッケージを導入する
 
-- As-Is の `process.yaml` をもとに BPR 分析
-- 改善案と改善レポートを生成
-- 改善案ごとにユーザーの採用 / 条件付き採用 / 保留 / 見送りを確認
-- 採用された改善案だけを To-Be へ反映
-- To-Be の YAML をレビューし、BPMN 2.0 XML、PlantUML、HTML を生成
-- BPR 分析時の公開情報参照先として Microsoft Learn を利用
+すでに構成済みのAgentを利用する方向けです。
 
-BPM Agent で作成した `process.yaml` を As-Is の入力として利用できます。
+1. 下表の **Agent ZIP** をダウンロードします。
+2. 組織でカスタムアプリのアップロードが許可されている場合、Microsoft Teamsの **［アプリ］→［アプリを管理］→［アプリをアップロード］→［カスタムアプリをアップロード］** からZIPを選択します。
+3. 追加したAgentをTeams／Microsoft 365 Copilotで開いて試します。テナント設定によっては、管理者による導入が必要です。
 
-- [BPR Agent のソースと詳細](./bpr-agent/)
-- [BPR Agent.zip](./BPR%20Agent.zip)
+| Agent | 配布用Agent ZIP | 個別の説明 |
+|---|---|---|
+| BPM | [BPM Agent.zip](./BPM%20Agent.zip) | [BPM Agentの使い方](./bpm-agent/) |
+| BPR | [BPR Agent.zip](./BPR%20Agent.zip) | [BPR Agentの使い方](./bpr-agent/) |
+| To-Be Gap Analyst | [To-Be Gap Analyst Agent.zip](./To-Be%20Gap%20Analyst%20Agent.zip) | [Gap Analystの使い方](./to-be-gap-analyst-agent/) |
 
-## Requirements
+詳細：[Microsoft Learn — 組織でのAgentのサイドロード](https://learn.microsoft.com/en-us/microsoft-365/copilot/agent-essentials/agent-policies/agent-sideload)。
 
-- Microsoft 365 Copilot
-- Microsoft 365 Copilot Agent Builder で Skills 機能を利用できる環境
+### 方法B：Agent BuilderでInstructionsとSkillsを登録する
 
-## Usage
+Agentの構成を確認・編集しながら試す方向けです。**上表のAgent ZIPを、Agent Builderの［スキルを追加］へアップロードする方法ではありません。**
 
-1. 利用するエージェントの ZIP パッケージをダウンロードします。
-2. Microsoft 365 Copilot Agent Builder にパッケージをインポートします。
-3. BPM Agent では、可視化したい業務内容を対話形式で説明します。
-4. BPR Agent では、As-Is の `process.yaml` を添付して改善分析を依頼します。
+1. このリポジトリをCloneするか、GitHubの **［Code］→［Download ZIP］** で取得して展開します。
+2. Python 3で次のコマンドを実行し、登録するAgentのSkillごとにZIPを作成します。外部ライブラリは不要です。
 
-BPR Agent で To-Be を作成する場合、改善案はユーザーが明示的に採用または条件付き採用したものだけが反映されます。
+   ```bash
+   python scripts/package_skills.py --agent bpm
+   python scripts/package_skills.py --agent bpr
+   python scripts/package_skills.py --agent gap
+   ```
 
-## Notes
+3. Microsoft 365 CopilotのAgent BuilderでAgentを新規作成し、各Agentディレクトリの **Instructions** を［構成］に設定します。
+4. ［構成］→［スキル］→［追加］で、`dist/skills/<agent>/` に生成された**個別のSkill ZIPを一つずつ**アップロードします（`SKILL.md`単独ではなくZIPを指定）。
+5. プレビューで業務の説明や入力資料を与え、想定どおり処理されるか確認します。
 
-生成 AI による推論を含むため、生成された業務プロセス、改善案、BPMN、その他の成果物は、実際の業務要件・組織ルール・セキュリティ・コンプライアンス要件と照合して確認してください。
+| Agent | Instructions | 登録するSkill数 |
+|---|---|---|
+| BPM | [`bpm-agent/agent-instructions.md`](./bpm-agent/agent-instructions.md) | 3 |
+| BPR | [`bpr-agent/bpr-agent-instructions.md`](./bpr-agent/bpr-agent-instructions.md) | 5 |
+| To-Be Gap Analyst | [`to-be-gap-analyst-agent/agent-instructions.md`](./to-be-gap-analyst-agent/agent-instructions.md) | 5 |
 
-このプロジェクトは Microsoft の公式製品、公式サンプル、公式サポートではありません。
+詳細：[Microsoft Learn — Agent BuilderへカスタムSkillを追加](https://learn.microsoft.com/ja-jp/microsoft-365/copilot/extensibility/agent-builder-add-skills)。Skill機能はプレビューで、対象ライセンス・Frontierプログラム等の利用条件があります。UIや登録可否はテナントによって異なります。
 
-## Privacy and Terms
+## Agent間で受け渡すファイル
 
-- [Privacy Statement](./PRIVACY.md)
-- [Terms of Use](./TERMS.md)
+```text
+業務の説明
+  ↓ BPM Agent
+process.yaml                         ← 現在の業務（As-Is）
+  ↓ BPR Agent
+improvement-analysis.yaml           ← 改善案と分析根拠
+improvement-decisions.yaml          ← ユーザーによる改善案の採否
+to-be-process.yaml                 ← 採用した改善を反映したTo-Be
+  ↓ To-Be Gap Analyst Agent（As-IsとBPR成果物3つの計4ファイルを照合）
+Gap一覧・Next Action・依存関係図・詳細レポート
+```
 
+BPR Agentは、ユーザーが**採用または条件付き採用**した改善だけをTo-Beへ反映します。Gap Analystは、業務導入の可否を自動承認するAgentではありません。各Agentの入力条件・作業例・成果物は個別READMEをご覧ください。
 
-## License
+## ソース・サンプル
 
-コードおよびドキュメントは [MIT License](./LICENSE) で公開しています。
-Microsoft 製品・サービスおよび第三者のコンテンツには、それぞれの利用条件が適用されます。
+| Agent | ソース・Skill | サンプル |
+|---|---|---|
+| BPM | [`bpm-agent/`](./bpm-agent/) | [`bpm-agent/sample-outputs/`](./bpm-agent/sample-outputs/) |
+| BPR | [`bpr-agent/`](./bpr-agent/) | [`bpr-agent/sample-outputs/`](./bpr-agent/sample-outputs/) |
+| To-Be Gap Analyst | [`to-be-gap-analyst-agent/`](./to-be-gap-analyst-agent/) | 現時点では同梱なし |
+
+公開用リポジトリです。**実際の顧客データ、個人情報、認証情報、未公開の業務資料、利用者が生成した分析レポートをPushしないでください。** Agentが出力するファイルには入力資料の内容が含まれる場合があります。
+
+## 注意事項・利用条件
+
+生成内容はAIの推論を含みます。元の業務、承認・権限・監査・コンプライアンス要件と照合して確認してください。これらはMicrosoftの公式製品・公式サンプル・公式サポートではありません。
+
+- [Privacy Statement](./PRIVACY.md) / [Terms of Use](./TERMS.md)
+- コードとドキュメント：[MIT License](./LICENSE)（Microsoft製品や第三者のコンテンツには各利用条件が適用されます）
