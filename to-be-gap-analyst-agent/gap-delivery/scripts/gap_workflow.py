@@ -14,7 +14,6 @@ import argparse
 import hashlib
 import json
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -262,6 +261,7 @@ def cmd_prepare(args: argparse.Namespace) -> int:
     template_path = out / "gap-analysis.template.json"
     template_path.write_text(json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8")
     manifest = {
+        "template_sha256": sha256_path(template_path),
         "workflow": WORKFLOW_ID,
         "status": "prepared",
         "source_pack": str(canonical_pack),
@@ -279,23 +279,71 @@ def cmd_prepare(args: argparse.Namespace) -> int:
     return 0
 
 
+def verify_preparation(args: argparse.Namespace) -> None:
+    """Bind final delivery to a prepare-generated manifest, index and template.
+
+    Hashes document consistency, not cryptographic attestation against a
+    malicious local writer. The authoritative source is rechecked in delivery.
+    """
+    if not args.pack or not args.preparation:
+        raise ValueError("final requires --pack and --preparation from gap_workflow.py prepare")
+    prep_path=Path(args.preparation).resolve()
+    prep=json.loads(prep_path.read_text(encoding="utf-8-sig"))
+    if prep.get("workflow")!=WORKFLOW_ID or prep.get("status")!="prepared":
+        raise ValueError("Invalid workflow preparation manifest")
+    pack_path=Path(args.pack).resolve()
+    if Path(prep.get("source_pack", "")).resolve()!=pack_path:
+        raise ValueError("The pack is not the prepared source pack")
+    if sha256_path(pack_path)!=prep.get("source_pack_sha256"):
+        raise ValueError("Prepared source pack hash mismatch")
+    index_path=Path(prep.get("source_index", "")).resolve()
+    template_path=Path(prep.get("analysis_template", "")).resolve()
+    if not index_path.is_file() or sha256_path(index_path)!=prep.get("source_index_sha256"):
+        raise ValueError("Prepared source index missing or modified")
+    if not template_path.is_file() or sha256_path(template_path)!=prep.get("template_sha256"):
+        raise ValueError("Prepared analysis template missing or modified")
+    template=json.loads(template_path.read_text(encoding="utf-8-sig"))
+    data=json.loads(Path(args.analysis).read_text(encoding="utf-8-sig"))
+    required_workflow={
+        "prepared_by":WORKFLOW_ID,
+        "source_pack_sha256":prep["source_pack_sha256"],
+        "source_index_sha256":prep["source_index_sha256"],
+        "prepared_from_files":template["workflow"]["prepared_from_files"],
+    }
+    if template.get("workflow")!=required_workflow or data.get("workflow")!=required_workflow:
+        raise ValueError("Final analysis workflow provenance differs from prepared template")
+    if data.get("source_manifest")!=template.get("source_manifest"):
+        raise ValueError("Final source_manifest differs from prepared original sources")
+    if set(x.get("improvement_id") for x in data.get("coverage",{}).get("improvement_lineage",[])) != \
+       set(x.get("improvement_id") for x in template.get("coverage",{}).get("improvement_lineage",[])):
+        raise ValueError("Improvement lineage differs from prepared original sources")
+    # Verify the original pack really yields the same index (no stale/forged index).
+    regenerated=inspect(pack_files(read_text(pack_path)))
+    indexed=json.loads(index_path.read_text(encoding="utf-8-sig"))
+    if regenerated!=indexed:
+        raise ValueError("Source index does not match original prepared pack")
+    if make_source_manifest(pack_files(read_text(pack_path))) != template.get("source_manifest"):
+        raise ValueError("Prepared manifest disagrees with original pack")
+
+
 def run_delivery(args: argparse.Namespace, mode: str) -> int:
-    script = Path(__file__).resolve().with_name("generate_delivery.py")
-    cmd = [
-        sys.executable, str(script),
-        "--mode", mode,
-        "--analysis", str(Path(args.analysis).resolve()),
-        "--output-dir", str(Path(args.output_dir).resolve()),
-        "--report-view", args.report_view,
-    ]
-    if args.pack:
-        cmd += ["--pack", str(Path(args.pack).resolve())]
-    if args.title:
-        cmd += ["--title", args.title]
-    if args.zip_path:
-        cmd += ["--zip", str(Path(args.zip_path).resolve())]
-    result = subprocess.run(cmd, text=True)
-    return result.returncode
+    import generate_delivery
+    if mode=="final":
+        # Do not leave a stale formal ZIP visible even when preflight fails.
+        out=Path(args.output_dir).resolve()
+        out.mkdir(parents=True,exist_ok=True)
+        candidates=[out/"gap-analysis-delivery.zip"]
+        if args.zip_path:
+            candidates.append(Path(args.zip_path).resolve())
+        for item in candidates:
+            if item.exists(): item.unlink()
+        verify_preparation(args)
+    options=argparse.Namespace(
+        mode=mode, analysis=args.analysis, output_dir=args.output_dir,
+        pack=args.pack, title=args.title, report_view=args.report_view,
+        zip_path=args.zip_path,
+    )
+    return generate_delivery.generate(options)
 
 
 def cmd_calendar(args: argparse.Namespace) -> int:
@@ -339,6 +387,7 @@ def parser() -> argparse.ArgumentParser:
         g.add_argument("--analysis", required=True)
         g.add_argument("--output-dir", required=True)
         g.add_argument("--pack", required=(mode == "final"))
+        g.add_argument("--preparation", required=(mode == "final"), help="workflow-preparation.json produced by prepare")
         g.add_argument("--title")
         g.add_argument("--report-view", choices=("preserve", "full"), default="full")
         g.add_argument("--zip", dest="zip_path")

@@ -92,3 +92,14 @@ Validated locally:
 - registered renderer reproducibility and formal manifest checks pass in the positive test.
 
 These are local script/package tests. They do not prove how consistently the preview Agent Builder runtime will follow the workflow; the purpose of v3 is to make skipped stages fail mechanically when the formal workflow is invoked.
+
+
+## PR #4 Copilot review follow-up (2026-10-14)
+
+- Formal source inspection cross-checks improvement-decisions records (approved/conditional_approved/hold/rejected), applied/conditional IMP IDs in To-Be, and analysis IMP lineage; missing or contradictory records fail. The parser supports `process.bpr` and `metadata.bpr`, and rejects duplicate source-pack `## FILE` blocks.
+- Formal delivery accepts only `input_validation.status=pass` and an empty `issues` collection.
+- `generate_delivery.py` cannot be invoked in `final` CLI mode. Use `gap_workflow.py final --preparation workflow-preparation.json` with the canonical source pack and completed analysis; the prepare manifest, template, index, and analysis provenance are checked.
+- Both default and custom `--zip` paths are cleared at the start of final generation, including preflight failures. Formal delivery never reuses an older ZIP.
+- The preparation SHA-256 values are reproducibility/consistency checks, **not** protection against a malicious local writer who controls all inputs; an adversarial attestation would require signed trusted state outside the workspace.
+- Regression tests for duplicate source markers, decision-source mismatches, invalid input validation, workflow bypass, prior custom ZIP cleanup, and preparation binding are under `tests/`.
+- These changes were tested locally; end-to-end Copilot Agent Builder runtime execution and human semantic business review remain required.

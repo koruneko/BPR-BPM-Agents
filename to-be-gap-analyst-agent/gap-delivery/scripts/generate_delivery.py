@@ -136,8 +136,10 @@ def _validate_quality(data: dict[str, Any], mode: str = "draft") -> dict[str, An
         issues.append("final analysis requires non-empty GAP, ACT, Q and Next Action sets")
     if final and not data.get("roadmap"):
         issues.append("final analysis requires roadmap")
-    if final and (data.get("input_validation") or {}).get("status") in (None, "", "pending_semantic_review"):
-        issues.append("final analysis requires completed input_validation")
+    if final and (data.get("input_validation") or {}).get("status") != "pass":
+        issues.append("final analysis requires input_validation.status=pass")
+    if final and (data.get("input_validation") or {}).get("issues"):
+        issues.append("final analysis input_validation.issues must be empty")
 
     allowed_priority = {"critical", "high", "medium", "low"}
     allowed_mapping_changes = {"maintained", "added", "changed", "removed", "merged", "split"}
@@ -500,8 +502,8 @@ def _verify_outputs(data: dict[str, Any], paths: dict[str, Path], html_text: str
     return {"status": "pass" if not issues else "fail", "issues": issues}
 
 
-def main() -> int:
-    p = argparse.ArgumentParser(description="Generate Gap Analysis derivatives under the registered workflow")
+def cli_main() -> int:
+    p = argparse.ArgumentParser(description="Internal derivative generator; use gap_workflow.py for formal delivery")
     p.add_argument("--mode", choices=("draft", "final"), default="final")
     p.add_argument("--analysis", required=True, help="Path to canonical gap-analysis.json")
     p.add_argument("--output-dir", required=True, help="Directory for generated artifacts")
@@ -510,7 +512,12 @@ def main() -> int:
     p.add_argument("--report-view", choices=("preserve", "full"), default="preserve")
     p.add_argument("--zip", dest="zip_path", help="Output ZIP path; defaults inside output-dir")
     args = p.parse_args()
+    if args.mode == "final":
+        raise ValueError("Direct final generation is unsupported; use gap_workflow.py final with a prepare manifest")
+    return generate(args)
 
+
+def generate(args: argparse.Namespace) -> int:
     analysis_path = Path(args.analysis).resolve()
     out_dir = Path(args.output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -525,6 +532,10 @@ def main() -> int:
         if target.exists():
             target.unlink()
     shutil.rmtree(out_dir / "scripts", ignore_errors=True)
+    # A custom ZIP may be outside output-dir and survive an earlier failed run.
+    zip_path = Path(args.zip_path).resolve() if args.zip_path else out_dir / ("gap-analysis-delivery.zip" if args.mode == "final" else "gap-analysis-DRAFT.zip")
+    if zip_path.exists():
+        zip_path.unlink()
 
     if args.mode == "final" and not args.pack:
         manifest = {"overall_status": "fail", "formal_verified": False, "mode": "final",
@@ -646,9 +657,6 @@ def main() -> int:
     manifest_path = out_dir / "verification-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    zip_path = Path(args.zip_path).resolve() if args.zip_path else out_dir / ("gap-analysis-delivery.zip" if args.mode == "final" else "gap-analysis-DRAFT.zip")
-    if zip_path.exists():
-        zip_path.unlink()
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
         for pth in sorted(out_dir.rglob("*")):
             if pth.is_file() and pth.resolve() != zip_path.resolve():
@@ -669,7 +677,7 @@ def main() -> int:
 
 if __name__ == "__main__":
     try:
-        raise SystemExit(main())
+        raise SystemExit(cli_main())
     except Exception as exc:
         print(json.dumps({"status": "fail", "error": str(exc)}, ensure_ascii=False), file=sys.stderr)
         raise

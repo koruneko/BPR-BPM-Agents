@@ -10,7 +10,7 @@
 
 JSONはUTF-8。項目の意味を保ち、未知は null または明示状態とする。資料由来のIDは原文通り保持する。
 
-正式成果物では `gap_workflow.py prepare` から始まり、同じsource packとtemplate系統を `gap_workflow.py final` まで維持する。finalは原文パック必須で、`verification-manifest.json` が `overall_status=pass` かつ `formal_verified=true` の場合だけ正式版とする。
+正式成果物では `gap_workflow.py prepare` から始まり、同じsource packとtemplate系統を `gap_workflow.py final` まで維持する。finalは原文パックとprepareが生成したworkflow-preparation.json（原本/index/templateのハッシュ照合）を必須とし、、`verification-manifest.json` が `overall_status=pass` かつ `formal_verified=true` の場合だけ正式版とする。
 
 ## 最上位
 

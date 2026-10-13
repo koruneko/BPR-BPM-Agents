@@ -52,7 +52,7 @@
 - レポート冒頭でGAP（業務の変更点）、ACT（必要な対応全体）、NA（対話で選んだ直近の一歩）、Q（確認したい質問）の番号を説明します。NAとACTは1対1ではなく、NA完了だけでACT完了とはしません。2つの図の対象範囲を近くで説明し、矢印の線と先端は必要段階に対応する同じ色にします。
 - 「フル」「全体を表示」が求められたらreport_view=fullにして全詳細と依存図を開いたHTMLを作ります。概要だけに省略しません。見やすい目次と図・表を維持します。日程なしでも全項目を表示できます。
 - 正式版として提示できるのは、final workflowが終了コード0で完了し、`verification-manifest.json` が `overall_status=pass` かつ `formal_verified=true` の場合だけです。`draft`、`pass_with_limits`、`formal_verified=false`、検証失敗の成果物を「正式」「検証済み」「完成」と表現しません。final gateは原文パック、原質問照合、全参加者・ノード・フロー、改善ID、分析品質、依存、営業日、派生成果物一致を満たさなければZIPを作成しません。
-- 正式成果物は `gap-delivery` に同梱された `scripts/gap_workflow.py final` だけを入口として生成します。必ずprepareで作成した `source-pack.txt` と最終 `gap-analysis.json` を渡し、`--report-view full` でCSV・Markdown・ロードマップ・HTML・検証結果・ZIPを一括生成します。内部の `generate_delivery.py` や `render_report.py` を正式生成入口として直接呼ばず、CSV・Markdown・ロードマップ・HTML・ZIPを個別に生成・修正しません。独自の `build_gap.py`、代替レンダラー、代替HTMLを作りません。workflowを利用不可と判断する前に実ファイルを確認して実行を試み、失敗時は実際の終了コード・エラーに基づいて未生成を明示します。
+- 正式成果物は `gap-delivery` に同梱された `scripts/gap_workflow.py final` だけを入口として生成します。必ずprepareで作成した `source-pack.txt`・`workflow-preparation.json` と最終 `gap-analysis.json` を渡し、`--report-view full` でCSV・Markdown・ロードマップ・HTML・検証結果・ZIPを一括生成します。内部の `generate_delivery.py` や `render_report.py` を正式生成入口として直接呼ばず、CSV・Markdown・ロードマップ・HTML・ZIPを個別に生成・修正しません。独自の `build_gap.py`、代替レンダラー、代替HTMLを作りません。workflowを利用不可と判断する前に実ファイルを確認して実行を試み、失敗時は実際の終了コード・エラーに基づいて未生成を明示します。
 - 人向けに「次に行うこと」「相談する相手」「最初の一歩」「得たい結果」「前後関係・必要な段階」「対話で整理した実行順」を使い、内部キー・状態値・不要な専門語を表示しません。引用原文と識別子は保持。Markdown記号を残さず、意味のあるHTMLの表・見出し・強調・箇条書きを使います。
 - 生成するHTMLレポートでは、自動配色と「自動/白い表示/暗い表示」を維持します。この配色ルールはHTMLレポートにのみ適用し、チャット応答の文字色・背景色は指定しません。OneDriveの隔離プレビューへ設定が伝わらない場合があり、完全連動を保証しません。外部実行スクリプト・外部リソースを使わず、文字列をエスケープ。狭い画面・印刷・横スクロールに配慮します。
 

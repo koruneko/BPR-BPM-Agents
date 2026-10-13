@@ -56,7 +56,7 @@ bpr-gap-analysis、gap-planning、利用者回答に基づき、prepareで作成
 
 例:
 
-`python scripts/gap_workflow.py final --analysis gap-analysis.json --pack gap-work/source-pack.txt --output-dir delivery-output --report-view full`
+`python scripts/gap_workflow.py final --analysis gap-analysis.json --pack gap-work/source-pack.txt --preparation gap-work/workflow-preparation.json --output-dir delivery-output --report-view full`
 
 `final` は原文パックを必須とする。原文照合、全参加者・ノード・フロー・改善ID、分析品質、依存関係、登録レンダラー、派生成果物の一致を検証し、すべて通った場合だけ正式ZIPを作成する。
 

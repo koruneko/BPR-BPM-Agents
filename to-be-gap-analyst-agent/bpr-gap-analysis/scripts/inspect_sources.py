@@ -6,7 +6,12 @@ QUESTION_KEYS={'open_questions','unresolved_questions','analysis_open_questions'
 def pack_files(text):
     blocks=re.findall(r'^## FILE: (.+?)\r?\n(?:SHA256: .*?\r?\n)?BEGIN FILE\r?\n(.*?)^END FILE\s*$',text,re.M|re.S)
     if not blocks: raise ValueError('Supported pack requires ## FILE:, BEGIN FILE, END FILE markers; do not guess or summarize missing content.')
-    return dict(blocks)
+    result={}
+    for name, body in blocks:
+        if name in result:
+            raise ValueError('Duplicate ## FILE name in source pack: '+name)
+        result[name]=body
+    return result
 
 def scalar(s):
     if s in ('|','>') or s.startswith(('|-','>-','|+','>+')): raise ValueError('Block scalar requires a YAML parser')
@@ -59,8 +64,155 @@ def ids(text,section):
     m=re.search(r'^'+section+r':\s*\n(.*?)(?=^[A-Za-z_]+:|\Z)',text,re.M|re.S)
     return re.findall(r'^- id: (.+)$',m[1],re.M) if m else []
 
+
+def _load_yaml_dict(text):
+    try:
+        import yaml
+    except ImportError:
+        return None
+    try:
+        obj=yaml.safe_load(text)
+    except Exception as exc:
+        raise ValueError('Invalid YAML in decision or To-Be source: '+str(exc)) from exc
+    if not isinstance(obj,dict):
+        raise ValueError('Expected a YAML mapping for decision or To-Be source')
+    return obj
+
+
+def _fallback_decisions(text):
+    # Supported standard BPR export subset only. Fail closed on any other layout.
+    section=re.search(r'^decisions:\s*\n(.*?)(?=^[A-Za-z_][\w-]*:|\Z)',text,re.M|re.S)
+    if not section:
+        raise ValueError('decisions require YAML parser or standard BPR export format')
+    rows=[]; current=None
+    for line in section.group(1).splitlines():
+        m=re.fullmatch(r'- improvement_id:\s*(IMP-[\w-]+)\s*',line)
+        if m:
+            if current is not None: rows.append(current)
+            current={'improvement_id':m.group(1)}
+            continue
+        m=re.fullmatch(r'  (decision|condition|note):\s*(.*?)\s*',line)
+        if m and current is not None:
+            current[m.group(1)]=None if m.group(2) in {'null','~',''} else scalar(m.group(2))
+            continue
+        if line.strip() and not line.startswith('  ') and not line.startswith('#'):
+            raise ValueError('Unsupported decisions YAML structure without PyYAML: '+line)
+    if current: rows.append(current)
+    return {'decisions': rows}
+
+
+def _fallback_to_be(text):
+    # Indentation-sensitive subset matching BPR's generated process.bpr YAML.
+    process=re.search(r'^(?:process|metadata):\s*\n(.*?)(?=^[A-Za-z_][\w-]*:|\Z)',text,re.M|re.S)
+    if not process:
+        raise ValueError('To-Be requires a process section')
+    bpr=re.search(r'^  bpr:\s*\n(.*?)(?=^  [A-Za-z_][\w-]*:|\Z)',process.group(1),re.M|re.S)
+    if not bpr:
+        raise ValueError('To-Be requires process.bpr section')
+    content=bpr.group(1)
+    result={}; current_key=None; current_row=None
+    for line in content.splitlines():
+        key=re.fullmatch(r'    (applied_improvements|conditional_improvements|change_log):\s*(\[\])?\s*',line)
+        if key:
+            current_key=key.group(1)
+            result[current_key]=[]
+            current_row=None
+            continue
+        if current_key in ('applied_improvements','conditional_improvements'):
+            match=re.fullmatch(r'    - (IMP-[\w-]+)\s*',line)
+            if match:
+                result[current_key].append(match.group(1))
+                continue
+            if current_key=='conditional_improvements':
+                match=re.fullmatch(r'    - improvement_id:\s*(IMP-[\w-]+)\s*',line)
+                if match:
+                    current_row={'improvement_id':match.group(1)}
+                    result[current_key].append(current_row)
+                    continue
+                match=re.fullmatch(r'      condition:\s*(.*?)\s*',line)
+                if match and current_row is not None:
+                    current_row['condition']=None if match.group(1) in {'null','~',''} else scalar(match.group(1))
+                    continue
+        if current_key=='change_log':
+            match=re.fullmatch(r'    - improvement_id:\s*(IMP-[\w-]+)\s*',line)
+            if match:
+                current_row={'improvement_id':match.group(1)}
+                result[current_key].append(current_row)
+                continue
+            match=re.fullmatch(r'      (action|condition):\s*(.*?)\s*',line)
+            if match and current_row is not None:
+                current_row[match.group(1)]=None if match.group(2) in {'null','~',''} else scalar(match.group(2))
+                continue
+        # Unknown fields may occur inside change_log entries: they are evidence,
+        # not adoption controls. Only direct declaration and action/condition are read.
+    if not all(k in result for k in ('applied_improvements','conditional_improvements','change_log')):
+        raise ValueError('Incomplete To-Be process.bpr adoption metadata without PyYAML')
+    return {'process':{'bpr':result}}
+
+
+def parse_decisions(text):
+    obj=_load_yaml_dict(text)
+    if obj is None: obj=_fallback_decisions(text)
+    rows=obj.get('decisions')
+    if not isinstance(rows,list) or not rows:
+        raise ValueError('improvement-decisions.yaml must contain non-empty decisions list')
+    result={}
+    for row in rows:
+        if not isinstance(row,dict) or not isinstance(row.get('improvement_id'),str) or not isinstance(row.get('decision'),str):
+            raise ValueError('Malformed improvement decision row')
+        imp=row['improvement_id']
+        if imp in result:
+            raise ValueError('Duplicate improvement decision: '+imp)
+        result[imp]={'decision':row['decision'].lower().strip(), 'condition':row.get('condition'), 'note':row.get('note')}
+    return result
+
+
+def parse_to_be_scope(text):
+    obj=_load_yaml_dict(text)
+    if obj is None: obj=_fallback_to_be(text)
+    process=obj.get('process') or {}
+    bpr=process.get('bpr') if isinstance(process,dict) else None
+    if not isinstance(bpr,dict):
+        metadata=obj.get('metadata')
+        bpr=metadata.get('bpr') if isinstance(metadata,dict) else None
+    if not isinstance(bpr,dict):
+        raise ValueError('To-Be process lacks process.bpr or metadata.bpr adoption metadata')
+    applied=bpr.get('applied_improvements')
+    conditional=bpr.get('conditional_improvements')
+    if not isinstance(applied,list) or not isinstance(conditional,list):
+        raise ValueError('To-Be process lacks applied_improvements or conditional_improvements arrays')
+    if not all(isinstance(x,str) for x in applied):
+        raise ValueError('To-Be applied improvements must be string IDs')
+    conditional_rows={}
+    for row in conditional:
+        if isinstance(row,str):
+            imp=row; condition=None
+        elif isinstance(row,dict) and isinstance(row.get('improvement_id'),str):
+            imp=row['improvement_id']; condition=row.get('condition')
+        else:
+            raise ValueError('Malformed To-Be conditional improvement')
+        if imp in conditional_rows:
+            raise ValueError('Duplicate To-Be conditional improvement: '+imp)
+        conditional_rows[imp]=condition
+    if len(applied)!=len(set(applied)):
+        raise ValueError('Duplicate improvements in To-Be applied list')
+    if set(conditional_rows) - set(applied):
+        raise ValueError('To-Be conditional improvements must also be in applied_improvements')
+    change_log=bpr.get('change_log')
+    if not isinstance(change_log,list):
+        raise ValueError('To-Be process lacks process.bpr.change_log')
+    actions={}
+    for row in change_log:
+        if not isinstance(row,dict) or not isinstance(row.get('improvement_id'),str):
+            raise ValueError('Malformed To-Be change_log row')
+        imp=row['improvement_id']
+        if imp in actions:
+            raise ValueError('Duplicate To-Be change_log: '+imp)
+        actions[imp]={'action':row.get('action'),'condition':row.get('condition')}
+    return {'applied':applied,'conditional':conditional_rows,'change_log':actions}
+
 def inspect(files):
-    index={'source_question_lineage':[], 'entity_sets':{}, 'improvement_sets':{}, 'unsupported':[]}
+    index={'source_question_lineage':[], 'entity_sets':{}, 'improvement_sets':{}, 'decision_sets':{}, 'to_be_applied_sets':{}, 'unsupported':[]}
     for file,text in files.items():
         if not file.endswith(('.yaml','.yml')): continue
         try: index['source_question_lineage']+=question_rows(file,text)
@@ -69,6 +221,16 @@ def inspect(files):
         if entity['nodes']: index['entity_sets'][file]=entity
         improvement_ids=ids(text,'improvements')
         if improvement_ids: index['improvement_sets'][file]=improvement_ids
+        if file.endswith(('improvement-decisions.yaml','improvement-decisions.yml')):
+            try:
+                index['decision_sets'][file]=parse_decisions(text)
+            except ValueError as exc:
+                index['unsupported'].append({'file':file,'reason':str(exc)})
+        if file.endswith(('to-be-process.yaml','to-be-process.yml')):
+            try:
+                index['to_be_applied_sets'][file]=parse_to_be_scope(text)
+            except ValueError as exc:
+                index['unsupported'].append({'file':file,'reason':str(exc)})
     return index
 
 def validate(index,data):
@@ -115,6 +277,57 @@ def validate(index,data):
             if r.get('improvement_id') in expected_imp:
                 if r.get('status') in (None,'','unmapped','未整理'): issues.append('Improvement not classified: '+str(r.get('improvement_id')))
                 if not (r.get('gap_ids') or r.get('action_ids') or r.get('no_gap_reason')): issues.append('Improvement lacks GAP/ACT or no_gap_reason: '+str(r.get('improvement_id')))
+    # A decision-approved IMP must be present in the adopted To-Be scope; a
+    # rejected/pending IMP must not be presented as applied. Verify the authoritative
+    # decision records, actual To-Be application metadata, and analysis lineage.
+    decisions_file=next((x['file'] for x in data.get('source_manifest',[]) if x.get('artifact_role')=='improvement_decisions'),None)
+    decisions=index.get('decision_sets',{}).get(decisions_file)
+    adopted=index.get('to_be_applied_sets',{}).get(to_source)
+    if decisions is None:
+        issues.append('Missing or unparseable improvement-decisions.yaml role')
+    if adopted is None:
+        issues.append('Missing or unparseable To-Be applied improvement metadata')
+    if decisions is not None and adopted is not None:
+        if set(decisions)!=expected_imp:
+            issues.append('Decision records do not match improvement-analysis IMP set')
+        applied=set(adopted['applied'])
+        conditional=set(adopted['conditional'])
+        allowed_applied={'approved'}
+        allowed_conditional={'conditional_approved','approved_with_conditions','conditional','conditionally_approved'}
+        for imp, record in decisions.items():
+            d=record['decision']
+            if d in allowed_applied:
+                if imp not in applied or imp in conditional:
+                    issues.append(f'{imp} approved decision not matched by To-Be applied scope')
+            elif d in allowed_conditional:
+                if imp not in applied or imp not in conditional:
+                    issues.append(f'{imp} conditional decision not matched by To-Be conditional scope')
+                if not (record.get('condition') or record.get('note')):
+                    issues.append(f'{imp} conditional decision requires documented note/condition')
+                if not adopted['conditional'].get(imp):
+                    issues.append(f'{imp} To-Be conditional improvement requires documented condition')
+            elif d in {'rejected','not_approved','deferred','pending','hold','on_hold','excluded'}:
+                if imp in applied or imp in conditional:
+                    issues.append(f'{imp} non-approved decision was applied in To-Be')
+            else:
+                issues.append(f'{imp} unknown improvement decision: {d!r}')
+        if (applied | conditional) - set(decisions):
+            issues.append('To-Be applies an IMP without a decision record')
+        if set(adopted['change_log']) != applied:
+            issues.append('To-Be change_log does not exactly match applied IMP IDs')
+        for imp in applied:
+            action=adopted['change_log'].get(imp,{}).get('action')
+            if not isinstance(action,str) or not action.strip():
+                issues.append(f'{imp} To-Be change_log lacks a recorded change action')
+        for row in lineage:
+            imp=row.get('improvement_id')
+            if imp not in decisions: continue
+            status=str(row.get('status','')).lower()
+            expected_applied=imp in applied|conditional
+            if expected_applied and status in {'rejected','excluded','deferred','not_approved','not_applied'}:
+                issues.append(f'{imp} analysis lineage incorrectly excludes an applied decision')
+            if not expected_applied and (status in {'applied','approved','implemented','conditional','conditionally_approved'} or (row.get('gap_ids') or row.get('action_ids'))):
+                issues.append(f'{imp} analysis lineage treats a non-applied decision as an applied Gap/ACT')
     return {'status':'pass' if not issues and not index['unsupported'] else 'fail','issues':issues,'unsupported':index['unsupported'],'source_question_occurrences':len(expected),'improvement_count':len(expected_imp)}
 
 if __name__=='__main__':
