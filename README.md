@@ -92,7 +92,7 @@ BPR Agentは、ユーザーが**採用または条件付き採用**した改善�
 |---|---|---|
 | BPM | [`bpm-agent/`](./bpm-agent/) | [`bpm-agent/sample-outputs/`](./bpm-agent/sample-outputs/) |
 | BPR | [`bpr-agent/`](./bpr-agent/) | [`bpr-agent/sample-outputs/`](./bpr-agent/sample-outputs/) |
-| To-Be Gap Analyst | [`to-be-gap-analyst-agent/`](./to-be-gap-analyst-agent/) | 現時点では同梱なし |
+| To-Be Gap Analyst | [`to-be-gap-analyst-agent/`](./to-be-gap-analyst-agent/) | [`to-be-gap-analyst-agent/sample-outputs/`](./to-be-gap-analyst-agent/sample-outputs/) |
 
 公開用リポジトリです。**実際の顧客データ、個人情報、認証情報、未公開の業務資料、利用者が生成した分析レポートをPushしないでください。** Agentが出力するファイルには入力資料の内容が含まれる場合があります。
 
