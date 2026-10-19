@@ -1,0 +1,5265 @@
+{
+  "schema_version": "1.0",
+  "analysis_id": "SAMPLE-GAP-EXPENSE-20261020",
+  "analysis_version": "1.1",
+  "process_name": "経費精算業務",
+  "status": "analysis_complete",
+  "readiness": {
+    "status": "blocked",
+    "reason": "To-Be設計は確定しているが、業務ルール、外部インターフェース、保管・権限・例外運用、実績ベースラインが未確認であり、実装・移行準備は未完了。"
+  },
+  "workflow": {
+    "prepared_by": "gap-delivery/scripts/gap_workflow.py@3",
+    "source_pack_sha256": "1ffc48571786bc5eff3fbf3688fb346ceba545ab91abebfdad542cc18e7d3b45",
+    "source_index_sha256": "f559daddd86862e8e697392f726b07344d6b50f8199dfe64ba9052f4ec8fbcd6",
+    "prepared_from_files": [
+      "process.yaml",
+      "to-be-process.yaml",
+      "improvement-analysis.yaml",
+      "improvement-decisions.yaml"
+    ]
+  },
+  "source_manifest": [
+    {
+      "file": "process.yaml",
+      "artifact_role": "as_is_process",
+      "read_status": "read_full",
+      "read_range": "full",
+      "sha256": "6d7fd621e139ff45b5d3ce249ac20346b51851668c5316d274ebc6365f91b693",
+      "id": "expense_reimbursement_as_is",
+      "version": "1.0",
+      "scope": {
+        "start": "社員が経費申請を開始する",
+        "end": "経理担当者が振込処理を完了する"
+      }
+    },
+    {
+      "file": "to-be-process.yaml",
+      "artifact_role": "to_be_process",
+      "read_status": "read_full",
+      "read_range": "full",
+      "sha256": "ee0f195f87c6e42869225e19a7f636de14961f003cc87aa9ab4b2c84732fa1f5",
+      "id": "expense_reimbursement_to_be",
+      "version": "2.0",
+      "scope": {
+        "start": "社員が経費申請を開始する",
+        "end": "経理担当者が振込処理を完了する"
+      }
+    },
+    {
+      "file": "improvement-analysis.yaml",
+      "artifact_role": "improvement_analysis",
+      "read_status": "read_full",
+      "read_range": "full",
+      "sha256": "9ffd06bac3b1ffcdc830713d47337d35655d6d3a34fa479ef0d738bf5f450079",
+      "analysis_id": "bpr-a-72939496e232d2e0",
+      "analysis_version": "1.5"
+    },
+    {
+      "file": "improvement-decisions.yaml",
+      "artifact_role": "improvement_decisions",
+      "read_status": "read_full",
+      "read_range": "full",
+      "sha256": "bec43b13b963a208f032f3326cad7085100f9376c7561fd4c1e9ca95b1999b59"
+    }
+  ],
+  "input_validation": {
+    "status": "pass",
+    "issues": [],
+    "summary": "As-Is 1.0、改善分析1.5、採否1.3、To-Be 2.0の参照関係を照合。IMP-001からIMP-008はすべてapprovedかつTo-Beのapplied_improvementsへ反映済み。"
+  },
+  "mappings": [
+    {
+      "id": "MAP-0001",
+      "type": "participant",
+      "as_is_ids": [
+        "accounting"
+      ],
+      "to_be_ids": [
+        "accounting"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "accounting",
+          "field": "participants[id=accounting]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "accounting",
+          "field": "participants[id=accounting]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0002",
+      "type": "participant",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "automation_system"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "automation_system",
+          "field": "participants[id=automation_system]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0003",
+      "type": "participant",
+      "as_is_ids": [
+        "department_head"
+      ],
+      "to_be_ids": [
+        "department_head"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "department_head",
+          "field": "participants[id=department_head]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "department_head",
+          "field": "participants[id=department_head]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0004",
+      "type": "participant",
+      "as_is_ids": [
+        "employee"
+      ],
+      "to_be_ids": [
+        "employee"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "employee",
+          "field": "participants[id=employee]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "employee",
+          "field": "participants[id=employee]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0005",
+      "type": "participant",
+      "as_is_ids": [
+        "manager"
+      ],
+      "to_be_ids": [
+        "manager"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "manager",
+          "field": "participants[id=manager]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "manager",
+          "field": "participants[id=manager]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0006",
+      "type": "node",
+      "as_is_ids": [
+        "amount_gateway"
+      ],
+      "to_be_ids": [
+        "amount_gateway"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "amount_gateway",
+          "field": "nodes[id=amount_gateway]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "amount_gateway",
+          "field": "nodes[id=amount_gateway]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0007",
+      "type": "node",
+      "as_is_ids": [
+        "approval_gateway"
+      ],
+      "to_be_ids": [
+        "approval_gateway"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "approval_gateway",
+          "field": "nodes[id=approval_gateway]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "approval_gateway",
+          "field": "nodes[id=approval_gateway]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0008",
+      "type": "node",
+      "as_is_ids": [
+        "approval_merge"
+      ],
+      "to_be_ids": [
+        "approval_merge"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "approval_merge",
+          "field": "nodes[id=approval_merge]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "approval_merge",
+          "field": "nodes[id=approval_merge]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0009",
+      "type": "node",
+      "as_is_ids": [
+        "bank_transfer"
+      ],
+      "to_be_ids": [
+        "bank_transfer"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "bank_transfer",
+          "field": "nodes[id=bank_transfer]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "bank_transfer",
+          "field": "nodes[id=bank_transfer]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0010",
+      "type": "node",
+      "as_is_ids": [
+        "check_amount"
+      ],
+      "to_be_ids": [],
+      "change_type": "removed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "check_amount",
+          "field": "nodes[id=check_amount]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0011",
+      "type": "node",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "correct_evidence_storage"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "correct_evidence_storage",
+          "field": "nodes[id=correct_evidence_storage]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0012",
+      "type": "node",
+      "as_is_ids": [
+        "correct_registration"
+      ],
+      "to_be_ids": [
+        "correct_registration"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "correct_registration",
+          "field": "nodes[id=correct_registration]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "correct_registration",
+          "field": "nodes[id=correct_registration]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0013",
+      "type": "node",
+      "as_is_ids": [
+        "defect_gateway"
+      ],
+      "to_be_ids": [
+        "defect_gateway"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "defect_gateway",
+          "field": "nodes[id=defect_gateway]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "defect_gateway",
+          "field": "nodes[id=defect_gateway]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0014",
+      "type": "node",
+      "as_is_ids": [
+        "department_head_return"
+      ],
+      "to_be_ids": [
+        "department_head_return"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "department_head_return",
+          "field": "nodes[id=department_head_return]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "department_head_return",
+          "field": "nodes[id=department_head_return]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0015",
+      "type": "node",
+      "as_is_ids": [
+        "department_head_review"
+      ],
+      "to_be_ids": [
+        "department_head_review"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "department_head_review",
+          "field": "nodes[id=department_head_review]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "department_head_review",
+          "field": "nodes[id=department_head_review]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0016",
+      "type": "node",
+      "as_is_ids": [
+        "end"
+      ],
+      "to_be_ids": [
+        "end"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "end",
+          "field": "nodes[id=end]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "end",
+          "field": "nodes[id=end]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0017",
+      "type": "node",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "evidence_result_gateway"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "evidence_result_gateway",
+          "field": "nodes[id=evidence_result_gateway]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0018",
+      "type": "node",
+      "as_is_ids": [
+        "manager_return"
+      ],
+      "to_be_ids": [
+        "manager_return"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "manager_return",
+          "field": "nodes[id=manager_return]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "manager_return",
+          "field": "nodes[id=manager_return]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0019",
+      "type": "node",
+      "as_is_ids": [
+        "manager_review"
+      ],
+      "to_be_ids": [
+        "manager_review"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "manager_review",
+          "field": "nodes[id=manager_review]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "manager_review",
+          "field": "nodes[id=manager_review]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0020",
+      "type": "node",
+      "as_is_ids": [
+        "parallel_join"
+      ],
+      "to_be_ids": [
+        "parallel_join"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "parallel_join",
+          "field": "nodes[id=parallel_join]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "parallel_join",
+          "field": "nodes[id=parallel_join]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0021",
+      "type": "node",
+      "as_is_ids": [
+        "parallel_split"
+      ],
+      "to_be_ids": [
+        "parallel_split"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "parallel_split",
+          "field": "nodes[id=parallel_split]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "parallel_split",
+          "field": "nodes[id=parallel_split]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0022",
+      "type": "node",
+      "as_is_ids": [
+        "register_accounting"
+      ],
+      "to_be_ids": [
+        "register_accounting"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "register_accounting",
+          "field": "nodes[id=register_accounting]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "register_accounting",
+          "field": "nodes[id=register_accounting]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0023",
+      "type": "node",
+      "as_is_ids": [
+        "registration_error_gateway"
+      ],
+      "to_be_ids": [
+        "registration_error_gateway"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "registration_error_gateway",
+          "field": "nodes[id=registration_error_gateway]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "registration_error_gateway",
+          "field": "nodes[id=registration_error_gateway]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0024",
+      "type": "node",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "resolve_transfer_failure"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "resolve_transfer_failure",
+          "field": "nodes[id=resolve_transfer_failure]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0025",
+      "type": "node",
+      "as_is_ids": [
+        "revise_resubmit"
+      ],
+      "to_be_ids": [
+        "revise_resubmit"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "revise_resubmit",
+          "field": "nodes[id=revise_resubmit]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "revise_resubmit",
+          "field": "nodes[id=revise_resubmit]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0026",
+      "type": "node",
+      "as_is_ids": [
+        "start"
+      ],
+      "to_be_ids": [
+        "start"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "start",
+          "field": "nodes[id=start]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "start",
+          "field": "nodes[id=start]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0027",
+      "type": "node",
+      "as_is_ids": [
+        "store_evidence"
+      ],
+      "to_be_ids": [
+        "store_evidence"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "store_evidence",
+          "field": "nodes[id=store_evidence]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "store_evidence",
+          "field": "nodes[id=store_evidence]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0028",
+      "type": "node",
+      "as_is_ids": [
+        "submit_expense"
+      ],
+      "to_be_ids": [
+        "submit_expense"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "submit_expense",
+          "field": "nodes[id=submit_expense]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "submit_expense",
+          "field": "nodes[id=submit_expense]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0029",
+      "type": "node",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "transfer_result_gateway"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "transfer_result_gateway",
+          "field": "nodes[id=transfer_result_gateway]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0030",
+      "type": "edge",
+      "as_is_ids": [
+        "e01"
+      ],
+      "to_be_ids": [
+        "e01"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e01",
+          "field": "edges[id=e01]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e01",
+          "field": "edges[id=e01]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0031",
+      "type": "edge",
+      "as_is_ids": [
+        "e02"
+      ],
+      "to_be_ids": [
+        "e02"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e02",
+          "field": "edges[id=e02]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e02",
+          "field": "edges[id=e02]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0032",
+      "type": "edge",
+      "as_is_ids": [
+        "e03"
+      ],
+      "to_be_ids": [
+        "e03"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e03",
+          "field": "edges[id=e03]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e03",
+          "field": "edges[id=e03]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0033",
+      "type": "edge",
+      "as_is_ids": [
+        "e04"
+      ],
+      "to_be_ids": [
+        "e04"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e04",
+          "field": "edges[id=e04]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e04",
+          "field": "edges[id=e04]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0034",
+      "type": "edge",
+      "as_is_ids": [
+        "e05"
+      ],
+      "to_be_ids": [
+        "e05"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e05",
+          "field": "edges[id=e05]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e05",
+          "field": "edges[id=e05]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0035",
+      "type": "edge",
+      "as_is_ids": [
+        "e06"
+      ],
+      "to_be_ids": [
+        "e06"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e06",
+          "field": "edges[id=e06]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e06",
+          "field": "edges[id=e06]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0036",
+      "type": "edge",
+      "as_is_ids": [
+        "e07"
+      ],
+      "to_be_ids": [
+        "e07"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e07",
+          "field": "edges[id=e07]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e07",
+          "field": "edges[id=e07]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0037",
+      "type": "edge",
+      "as_is_ids": [
+        "e08"
+      ],
+      "to_be_ids": [],
+      "change_type": "removed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e08",
+          "field": "edges[id=e08]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0038",
+      "type": "edge",
+      "as_is_ids": [
+        "e09"
+      ],
+      "to_be_ids": [
+        "e09"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e09",
+          "field": "edges[id=e09]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e09",
+          "field": "edges[id=e09]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0039",
+      "type": "edge",
+      "as_is_ids": [
+        "e10"
+      ],
+      "to_be_ids": [
+        "e10"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e10",
+          "field": "edges[id=e10]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e10",
+          "field": "edges[id=e10]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0040",
+      "type": "edge",
+      "as_is_ids": [
+        "e11"
+      ],
+      "to_be_ids": [
+        "e11"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e11",
+          "field": "edges[id=e11]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e11",
+          "field": "edges[id=e11]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0041",
+      "type": "edge",
+      "as_is_ids": [
+        "e12"
+      ],
+      "to_be_ids": [
+        "e12"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e12",
+          "field": "edges[id=e12]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e12",
+          "field": "edges[id=e12]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0042",
+      "type": "edge",
+      "as_is_ids": [
+        "e13"
+      ],
+      "to_be_ids": [
+        "e13"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e13",
+          "field": "edges[id=e13]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e13",
+          "field": "edges[id=e13]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0043",
+      "type": "edge",
+      "as_is_ids": [
+        "e14"
+      ],
+      "to_be_ids": [
+        "e14"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e14",
+          "field": "edges[id=e14]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e14",
+          "field": "edges[id=e14]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0044",
+      "type": "edge",
+      "as_is_ids": [
+        "e15"
+      ],
+      "to_be_ids": [
+        "e15"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e15",
+          "field": "edges[id=e15]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e15",
+          "field": "edges[id=e15]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0045",
+      "type": "edge",
+      "as_is_ids": [
+        "e16"
+      ],
+      "to_be_ids": [
+        "e16"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e16",
+          "field": "edges[id=e16]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e16",
+          "field": "edges[id=e16]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0046",
+      "type": "edge",
+      "as_is_ids": [
+        "e17"
+      ],
+      "to_be_ids": [
+        "e17"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e17",
+          "field": "edges[id=e17]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e17",
+          "field": "edges[id=e17]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0047",
+      "type": "edge",
+      "as_is_ids": [
+        "e18"
+      ],
+      "to_be_ids": [
+        "e18"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e18",
+          "field": "edges[id=e18]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e18",
+          "field": "edges[id=e18]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0048",
+      "type": "edge",
+      "as_is_ids": [
+        "e19"
+      ],
+      "to_be_ids": [
+        "e19"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e19",
+          "field": "edges[id=e19]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e19",
+          "field": "edges[id=e19]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0049",
+      "type": "edge",
+      "as_is_ids": [
+        "e20"
+      ],
+      "to_be_ids": [
+        "e20"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e20",
+          "field": "edges[id=e20]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e20",
+          "field": "edges[id=e20]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0050",
+      "type": "edge",
+      "as_is_ids": [
+        "e21"
+      ],
+      "to_be_ids": [
+        "e21"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e21",
+          "field": "edges[id=e21]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e21",
+          "field": "edges[id=e21]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0051",
+      "type": "edge",
+      "as_is_ids": [
+        "e22"
+      ],
+      "to_be_ids": [
+        "e22"
+      ],
+      "change_type": "changed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e22",
+          "field": "edges[id=e22]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e22",
+          "field": "edges[id=e22]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0052",
+      "type": "edge",
+      "as_is_ids": [
+        "e23"
+      ],
+      "to_be_ids": [
+        "e23"
+      ],
+      "change_type": "maintained",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e23",
+          "field": "edges[id=e23]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e23",
+          "field": "edges[id=e23]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0053",
+      "type": "edge",
+      "as_is_ids": [
+        "e24"
+      ],
+      "to_be_ids": [],
+      "change_type": "removed",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "e24",
+          "field": "edges[id=e24]",
+          "note": "As-Is原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0054",
+      "type": "edge",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "e25"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e25",
+          "field": "edges[id=e25]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0055",
+      "type": "edge",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "e26"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e26",
+          "field": "edges[id=e26]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0056",
+      "type": "edge",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "e27"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e27",
+          "field": "edges[id=e27]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0057",
+      "type": "edge",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "e28"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e28",
+          "field": "edges[id=e28]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0058",
+      "type": "edge",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "e29"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e29",
+          "field": "edges[id=e29]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0059",
+      "type": "edge",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "e30"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e30",
+          "field": "edges[id=e30]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    {
+      "id": "MAP-0060",
+      "type": "edge",
+      "as_is_ids": [],
+      "to_be_ids": [
+        "e31"
+      ],
+      "change_type": "added",
+      "semantic_delta": "As-IsとTo-Beの同一IDを意味・責任・入出力・条件で照合。変更内容は関連GapとTo-Be原本を参照。",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "e31",
+          "field": "edges[id=e31]",
+          "note": "To-Be原本",
+          "evidence_kind": "documented"
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "id": "GAP-001",
+      "title": "申請時検証と差し戻し標準化",
+      "category": "rules",
+      "kind": "design_change",
+      "as_is": "申請後に上長が不備を発見し、自由度の高い指摘で差し戻す。",
+      "to_be": "送信前検証と共通の差し戻し分類・修正対象・再確認対象を使用する。",
+      "delta": "社員の手戻りを減らし、再申請履歴を追跡可能にする。",
+      "implementation_status": "unknown",
+      "improvement_ids": [
+        "IMP-001",
+        "IMP-002"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "submit_expense",
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "revise_resubmit",
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-012"
+      ],
+      "question_ids": [
+        "Q-005",
+        "Q-006",
+        "Q-007",
+        "Q-008",
+        "Q-025",
+        "Q-027",
+        "Q-028",
+        "Q-029",
+        "Q-030",
+        "Q-048"
+      ],
+      "priority": "high",
+      "priority_reason": "差し戻し削減に直接寄与し、比較的小さな業務ルール整備から開始できるが、再申請上限等は未決定。",
+      "confidence": "high",
+      "acceptance_criteria": [
+        "社員の手戻りを減らし、再申請履歴を追跡可能にする。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "社員の手戻りを減らし、再申請履歴を追跡可能にする。",
+        "root_cause": "申請後に上長が不備を発見し、自由度の高い指摘で差し戻す。。実装状況は資料から未確認。",
+        "preserve": "上長・部門長による業務判断は維持する。",
+        "target_outcome": "送信前検証と共通の差し戻し分類・修正対象・再確認対象を使用する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "差し戻し率を導入前後で測定し、理由別件数を経理業務責任者が確認する。",
+        "priority_assessment": "差し戻し削減に直接寄与し、比較的小さな業務ルール整備から開始できるが、再申請上限等は未決定。",
+        "tradeoff": "入力を厳格にし過ぎると申請負担が増えるため、形式検証と妥当性判断を分ける。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": "IMP-001",
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    },
+    {
+      "id": "GAP-002",
+      "title": "5万円承認ルーティングの自動化と統制",
+      "category": "control",
+      "kind": "design_change",
+      "as_is": "上長が金額を確認して部門長承認要否を判定する。",
+      "to_be": "税込・日本円換算後の申請総額を50000円と比較し自動分岐する。",
+      "delta": "手動判定をゼロにし、閾値変更を統制する。",
+      "implementation_status": "unknown",
+      "improvement_ids": [
+        "IMP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "check_amount",
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "amount_gateway",
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-003",
+        "ACT-012"
+      ],
+      "question_ids": [
+        "Q-009",
+        "Q-031",
+        "Q-032"
+      ],
+      "priority": "medium",
+      "priority_reason": "判定ルールは解決済みで早期効果が期待できるが、閾値変更権限と履歴要件の確定が必要。",
+      "confidence": "high",
+      "acceptance_criteria": [
+        "手動判定をゼロにし、閾値変更を統制する。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "手動判定をゼロにし、閾値変更を統制する。",
+        "root_cause": "上長が金額を確認して部門長承認要否を判定する。。実装状況は資料から未確認。",
+        "preserve": "5万円以上の部門長審査自体は維持する。",
+        "target_outcome": "税込・日本円換算後の申請総額を50000円と比較し自動分岐する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "正常系の手動判定件数0件をルーティング履歴で確認する。",
+        "priority_assessment": "判定ルールは解決済みで早期効果が期待できるが、閾値変更権限と履歴要件の確定が必要。",
+        "tradeoff": "自動化で一貫性は上がるが、閾値変更権限の集中リスクを履歴で統制する。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": "IMP-003",
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    },
+    {
+      "id": "GAP-003",
+      "title": "承認状態・通知・滞留管理",
+      "category": "process",
+      "kind": "design_change",
+      "as_is": "人的審査はあるが、横断的な状態、通知、日時、コメント、滞留管理は明示されていない。",
+      "to_be": "人的判断を維持し、依頼・状態・履歴を一元管理する。",
+      "delta": "承認状況を可視化し、ハンドオフ漏れと滞留を管理する。",
+      "implementation_status": "unknown",
+      "improvement_ids": [
+        "IMP-004"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "manager_review",
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "department_head_review",
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-004",
+        "ACT-005",
+        "ACT-012"
+      ],
+      "question_ids": [
+        "Q-004",
+        "Q-010",
+        "Q-011",
+        "Q-012",
+        "Q-019",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-042"
+      ],
+      "priority": "high",
+      "priority_reason": "統制と利用者体験の双方に効くが、SLA、代理承認、権限・ライセンスが未確認。",
+      "confidence": "medium",
+      "acceptance_criteria": [
+        "承認状況を可視化し、ハンドオフ漏れと滞留を管理する。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "承認状況を可視化し、ハンドオフ漏れと滞留を管理する。",
+        "root_cause": "人的審査はあるが、横断的な状態、通知、日時、コメント、滞留管理は明示されていない。。実装状況は資料から未確認。",
+        "preserve": "承認・却下の最終判断は人が行う。",
+        "target_outcome": "人的判断を維持し、依頼・状態・履歴を一元管理する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "承認リードタイムとSLA超過件数を状態履歴から測定する。",
+        "priority_assessment": "統制と利用者体験の双方に効くが、SLA、代理承認、権限・ライセンスが未確認。",
+        "tradeoff": "通知強化は滞留を減らす一方、過剰通知を避けるためSLA別に設計する。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": "IMP-004",
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    },
+    {
+      "id": "GAP-004",
+      "title": "会計システム連携と例外処理",
+      "category": "technology",
+      "kind": "design_change",
+      "as_is": "経理が申請情報を会計システムへ再入力し、入力エラーを手動修正する。",
+      "to_be": "正常系を自動連携し、失敗時のみ経理が原因を是正して再実行する。",
+      "delta": "正常系の手入力をゼロにし、転記エラーを削減する。",
+      "implementation_status": "unknown",
+      "improvement_ids": [
+        "IMP-005"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "register_accounting",
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "registration_error_gateway",
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-006",
+        "ACT-007",
+        "ACT-013",
+        "ACT-015"
+      ],
+      "question_ids": [
+        "Q-013",
+        "Q-014",
+        "Q-015",
+        "Q-025",
+        "Q-036",
+        "Q-037",
+        "Q-038",
+        "Q-048"
+      ],
+      "priority": "critical",
+      "priority_reason": "省力化効果が最大級だが、外部IF、認証、マッピング、重複防止、訂正経路が未確認で、実装前調査が最優先。",
+      "confidence": "medium",
+      "acceptance_criteria": [
+        "正常系の手入力をゼロにし、転記エラーを削減する。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "正常系の手入力をゼロにし、転記エラーを削減する。",
+        "root_cause": "経理が申請情報を会計システムへ再入力し、入力エラーを手動修正する。。実装状況は資料から未確認。",
+        "preserve": "連携失敗の原因是正は経理と技術担当が担う。",
+        "target_outcome": "正常系を自動連携し、失敗時のみ経理が原因を是正して再実行する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "正常系の会計手入力0件、連携成功率、重複登録0件を連携ログで確認する。",
+        "priority_assessment": "省力化効果が最大級だが、外部IF、認証、マッピング、重複防止、訂正経路が未確認で、実装前調査が最優先。",
+        "tradeoff": "大きな省力化と引き換えに外部IF依存が増すため、手動代替と訂正経路を残す。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": "IMP-005",
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    },
+    {
+      "id": "GAP-005",
+      "title": "エビデンス自動保管と追跡",
+      "category": "data",
+      "kind": "design_change",
+      "as_is": "申請済みエビデンスを経理が別途所定先へ手動保管する。",
+      "to_be": "承認後に自動保存し、申請ID、保存先、結果、版を記録する。",
+      "delta": "正常系の手動保管をゼロにし、監査追跡性を高める。",
+      "implementation_status": "unknown",
+      "improvement_ids": [
+        "IMP-006"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "store_evidence",
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "correct_evidence_storage",
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-008",
+        "ACT-009",
+        "ACT-013",
+        "ACT-016"
+      ],
+      "question_ids": [
+        "Q-016",
+        "Q-017",
+        "Q-018",
+        "Q-026",
+        "Q-039",
+        "Q-040",
+        "Q-041",
+        "Q-049"
+      ],
+      "priority": "high",
+      "priority_reason": "統制と省力化に寄与するが、正式保管先、保持期間、版、アクセス権が未確認。",
+      "confidence": "medium",
+      "acceptance_criteria": [
+        "正常系の手動保管をゼロにし、監査追跡性を高める。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "正常系の手動保管をゼロにし、監査追跡性を高める。",
+        "root_cause": "申請済みエビデンスを経理が別途所定先へ手動保管する。。実装状況は資料から未確認。",
+        "preserve": "法令・監査上必要な原本性とアクセス制御は維持する。",
+        "target_outcome": "承認後に自動保存し、申請ID、保存先、結果、版を記録する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "正常系の手動保管0件、申請ID未紐付け0件を保存結果から確認する。",
+        "priority_assessment": "統制と省力化に寄与するが、正式保管先、保持期間、版、アクセス権が未確認。",
+        "tradeoff": "自動保管は省力化するが、保管先選定を急ぐと保持・権限要件を満たせない。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": "IMP-006",
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    },
+    {
+      "id": "GAP-006",
+      "title": "並行処理の成功条件と滞留統制",
+      "category": "control",
+      "kind": "design_change",
+      "as_is": "会計登録と保管の完了後に振込むが、保管失敗や片側滞留の扱いが明示されない。",
+      "to_be": "両処理が成功した場合のみ振込を許可し、失敗・期限超過は是正後に再実行する。",
+      "delta": "片側未完了による統制逸脱をゼロにする。",
+      "implementation_status": "unknown",
+      "improvement_ids": [
+        "IMP-007"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "parallel_split",
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "bank_transfer",
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-010",
+        "ACT-013"
+      ],
+      "question_ids": [
+        "Q-019",
+        "Q-020",
+        "Q-021",
+        "Q-042",
+        "Q-043",
+        "Q-044"
+      ],
+      "priority": "critical",
+      "priority_reason": "振込前の重要統制であり、抜けると不完全な状態で支払うリスクがある。SLAと例外責任者は未確認。",
+      "confidence": "high",
+      "acceptance_criteria": [
+        "片側未完了による統制逸脱をゼロにする。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "片側未完了による統制逸脱をゼロにする。",
+        "root_cause": "会計登録と保管の完了後に振込むが、保管失敗や片側滞留の扱いが明示されない。。実装状況は資料から未確認。",
+        "preserve": "両処理完了後に振込む既存原則を維持し、成功確認へ強化する。",
+        "target_outcome": "両処理が成功した場合のみ振込を許可し、失敗・期限超過は是正後に再実行する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "片側未完了のまま振込へ進んだ件数0件を状態遷移ログで確認する。",
+        "priority_assessment": "振込前の重要統制であり、抜けると不完全な状態で支払うリスクがある。SLAと例外責任者は未確認。",
+        "tradeoff": "厳格な停止は支払遅延を招き得るため、迂回ではなく期限超過の通知・是正経路を整える。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": "IMP-007",
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    },
+    {
+      "id": "GAP-007",
+      "title": "振込結果・失敗・照合の標準化",
+      "category": "operations",
+      "kind": "design_change",
+      "as_is": "振込入力、結果、失敗時の扱い、照合記録が明示されていない。",
+      "to_be": "標準入力と受付番号・日時・成否・失敗理由を記録し、失敗是正後に再実行する。",
+      "delta": "振込結果の未記録をゼロにし、照合可能にする。",
+      "implementation_status": "unknown",
+      "improvement_ids": [
+        "IMP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": "bank_transfer",
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": "resolve_transfer_failure",
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-011",
+        "ACT-013"
+      ],
+      "question_ids": [
+        "Q-022",
+        "Q-023",
+        "Q-024",
+        "Q-045",
+        "Q-046",
+        "Q-047"
+      ],
+      "priority": "high",
+      "priority_reason": "資金移動の完了判定に必須だが、銀行チャネル、取消・再実行・照合責任が未決定。",
+      "confidence": "medium",
+      "acceptance_criteria": [
+        "振込結果の未記録をゼロにし、照合可能にする。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "振込結果の未記録をゼロにし、照合可能にする。",
+        "root_cause": "振込入力、結果、失敗時の扱い、照合記録が明示されていない。。実装状況は資料から未確認。",
+        "preserve": "振込実行は経理の統制下に置く。",
+        "target_outcome": "標準入力と受付番号・日時・成否・失敗理由を記録し、失敗是正後に再実行する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "振込結果未記録0件、失敗案件の未照合0件を受付番号と照合記録で確認する。",
+        "priority_assessment": "資金移動の完了判定に必須だが、銀行チャネル、取消・再実行・照合責任が未決定。",
+        "tradeoff": "記録項目を増やす負担と追跡性を両立し、銀行連携方式が不明な間は自動化を確定しない。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": "IMP-008",
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    },
+    {
+      "id": "GAP-008",
+      "title": "効果測定・運用責任・移行準備",
+      "category": "measurement",
+      "kind": "readiness_unknown",
+      "as_is": "件数、工数、差し戻し率、登録エラー率、SLA、プロセスオーナーが未確認。",
+      "to_be": "導入前後の指標、測定方法、責任者、教育・監視・切戻しを定義する。",
+      "delta": "改善効果と運用品質を継続評価できる状態にする。",
+      "implementation_status": "unknown",
+      "improvement_ids": [],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": null,
+          "field": "nodes/metadata",
+          "note": "As-Isの確認可能な状態",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "nodes/metadata",
+          "note": "採用To-Beの要求",
+          "evidence_kind": "documented"
+        }
+      ],
+      "action_ids": [
+        "ACT-014",
+        "ACT-017"
+      ],
+      "question_ids": [
+        "Q-001",
+        "Q-002",
+        "Q-003",
+        "Q-025",
+        "Q-026",
+        "Q-048",
+        "Q-049"
+      ],
+      "priority": "high",
+      "priority_reason": "バランス方針の成果判定に必要だが、数値がないため効果は未算定。実装調査と並行して基準収集を開始できる。",
+      "confidence": "medium",
+      "acceptance_criteria": [
+        "改善効果と運用品質を継続評価できる状態にする。",
+        "関連する正常系・境界値・失敗系の受入シナリオで期待結果を確認できること。"
+      ],
+      "status": "open",
+      "decision_context": {
+        "impact": "改善効果と運用品質を継続評価できる状態にする。",
+        "root_cause": "件数、工数、差し戻し率、登録エラー率、SLA、プロセスオーナーが未確認。。実装状況は資料から未確認。",
+        "preserve": "原本で設定された性能目標と人的判断の範囲を維持する。",
+        "target_outcome": "導入前後の指標、測定方法、責任者、教育・監視・切戻しを定義する。",
+        "response_strategy": "業務ルール決定、技術調査、設計、実装、受入を段階分割する。",
+        "scope": "経費申請開始から振込結果記録まで。",
+        "success_measure": "月間件数、工数、差し戻し率、エラー率の測定定義と基準値をプロセスオーナー候補が承認する。",
+        "priority_assessment": "バランス方針の成果判定に必要だが、数値がないため効果は未算定。実装調査と並行して基準収集を開始できる。",
+        "tradeoff": "測定準備には工数がかかるが、基準なしでは三つの優先成果の達成を判断できない。",
+        "source_refs": [
+          {
+            "file": "improvement-analysis.yaml",
+            "entity_id": null,
+            "field": "improvements/analysis_open_questions",
+            "note": "判断材料",
+            "evidence_kind": "documented"
+          }
+        ]
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "ACT-001",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "title": "入力検証項目とエビデンス要件を確定",
+      "deliverables": [
+        "入力検証項目表、経費区分別エビデンス要件、エラーメッセージ案"
+      ],
+      "deliverable": "入力検証項目表、経費区分別エビデンス要件、エラーメッセージ案",
+      "owner_candidate": "経理業務責任者とPower Apps担当",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "差し戻し削減の土台であり、アプリ改修前に業務要件を固定する。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "入力検証項目表、経費区分別エビデンス要件、エラーメッセージ案が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-002",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "title": "差し戻し・再申請ルールを確定",
+      "deliverables": [
+        "差し戻し理由分類、必須コメント、再確認範囲、再申請上限・終了条件の決定記録"
+      ],
+      "deliverable": "差し戻し理由分類、必須コメント、再確認範囲、再申請上限・終了条件の決定記録",
+      "owner_candidate": "経理業務責任者、上長・部門長代表",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "承認者間のばらつきを抑え、再差し戻しを減らす。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "差し戻し理由分類、必須コメント、再確認範囲、再申請上限・終了条件の決定記録が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-003",
+      "gap_ids": [
+        "GAP-002"
+      ],
+      "title": "金額判定の設定・変更統制を設計",
+      "deliverables": [
+        "50000円判定仕様、変更権限、変更履歴、境界値試験シナリオ"
+      ],
+      "deliverable": "50000円判定仕様、変更権限、変更履歴、境界値試験シナリオ",
+      "owner_candidate": "経理業務責任者とPower Apps／自動化担当",
+      "owner_status": "proposed",
+      "priority": "medium",
+      "priority_reason": "判定ルールは確定済みで設計可能だが、変更統制を欠くと誤ルーティングにつながる。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "50000円判定仕様、変更権限、変更履歴、境界値試験シナリオが関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-004",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "title": "承認SLA・代理・取消・再割当ルールを決定",
+      "deliverables": [
+        "承認運用ルール、SLA、期限超過通知・エスカレーション表"
+      ],
+      "deliverable": "承認運用ルール、SLA、期限超過通知・エスカレーション表",
+      "owner_candidate": "経理業務責任者と承認者代表",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "承認管理を実装する前に例外と期限の業務判断が必要。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "承認運用ルール、SLA、期限超過通知・エスカレーション表が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-005",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "title": "承認基盤の権限・ライセンスと連携方式を確認",
+      "deliverables": [
+        "利用可能ライセンス・環境権限の確認結果、既存Power Appsとの連携方式案"
+      ],
+      "deliverable": "利用可能ライセンス・環境権限の確認結果、既存Power Appsとの連携方式案",
+      "owner_candidate": "Power Platform管理担当",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "実現性確認を先行し、未確認の製品前提で構築を始めないため。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "利用可能ライセンス・環境権限の確認結果、既存Power Appsとの連携方式案が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-006",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "title": "会計システム連携仕様を調査",
+      "deliverables": [
+        "APIまたは入出力ファイル仕様、認証、疎通可否、取消・訂正手段の回答"
+      ],
+      "deliverable": "APIまたは入出力ファイル仕様、認証、疎通可否、取消・訂正手段の回答",
+      "owner_candidate": "会計システム管理・技術担当",
+      "owner_status": "proposed",
+      "priority": "critical",
+      "priority_reason": "自動連携実装の可否を左右する最大の技術ゲート。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "APIまたは入出力ファイル仕様、認証、疎通可否、取消・訂正手段の回答が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-007",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "title": "会計項目マッピングと重複防止・再実行を設計",
+      "deliverables": [
+        "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計"
+      ],
+      "deliverable": "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計",
+      "owner_candidate": "経理業務担当と会計システム技術担当",
+      "owner_status": "proposed",
+      "priority": "critical",
+      "priority_reason": "仕様調査後に、データ欠損や二重登録を防ぐ具体設計が必要。",
+      "depends_on": [
+        "ACT-006"
+      ],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [
+        {
+          "predecessor_id": "ACT-006",
+          "type": "required",
+          "gate": "finalize",
+          "condition": "会計システムのAPI/ファイル項目定義と認証・訂正経路を確認した結果を、会計マッピングの正式確定前に取得する",
+          "reason": "未確認の項目や結果コードでは重複防止と会計登録の仕様を確定できない",
+          "can_proceed": "既知項目で仮の対応表を作成できる",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "improvement-analysis.yaml: IMP-005 会計連携仕様の未確認事項",
+          "status": "proposed",
+          "deferral_agreed": false
+        }
+      ],
+      "start_status": "blocked",
+      "entry_conditions": [
+        "先行課題の必要成果が揃うこと。"
+      ],
+      "acceptance_criteria": [
+        "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-008",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "title": "保管・保持・アクセス要件を確定",
+      "deliverables": [
+        "正式保管先、命名・メタデータ、保持期間、版、アクセス権の決定記録"
+      ],
+      "deliverable": "正式保管先、命名・メタデータ、保持期間、版、アクセス権の決定記録",
+      "owner_candidate": "情報管理・監査担当と経理業務責任者",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "監査要件を満たさない自動保管を避けるため、実装前の確定が必要。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "正式保管先、命名・メタデータ、保持期間、版、アクセス権の決定記録が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-009",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "title": "エビデンス自動保管と申請ID連携を設計",
+      "deliverables": [
+        "保存フロー設計、申請ID関連付け、重複・欠損・失敗時の再実行仕様"
+      ],
+      "deliverable": "保存フロー設計、申請ID関連付け、重複・欠損・失敗時の再実行仕様",
+      "owner_candidate": "Power Apps／自動化担当と情報管理担当",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "保管要件の確定後に正常系と例外系を一貫して設計する。",
+      "depends_on": [
+        "ACT-008"
+      ],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [
+        {
+          "predecessor_id": "ACT-008",
+          "type": "required",
+          "gate": "finalize",
+          "condition": "正式なエビデンス保管先、保持期間、アクセス権・版管理方針が確定してから保管設計を確定する",
+          "reason": "監査・保持方針によって保管技術と処理が変わるため",
+          "can_proceed": "候補の保存手段を比較・試作できる",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "improvement-analysis.yaml: IMP-006 保管要件の未確認事項",
+          "status": "proposed",
+          "deferral_agreed": false
+        }
+      ],
+      "start_status": "blocked",
+      "entry_conditions": [
+        "先行課題の必要成果が揃うこと。"
+      ],
+      "acceptance_criteria": [
+        "保存フロー設計、申請ID関連付け、重複・欠損・失敗時の再実行仕様が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-010",
+      "gap_ids": [
+        "GAP-006"
+      ],
+      "title": "並行処理の状態・SLA・例外責任を設計",
+      "deliverables": [
+        "会計登録・保管の状態遷移、成功条件、期限超過、通知先、手動振込禁止・例外ルール"
+      ],
+      "deliverable": "会計登録・保管の状態遷移、成功条件、期限超過、通知先、手動振込禁止・例外ルール",
+      "owner_candidate": "経理業務責任者と実装担当",
+      "owner_status": "proposed",
+      "priority": "critical",
+      "priority_reason": "振込前統制の中核であり、片側未完了を見逃さない条件を明示する。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "会計登録・保管の状態遷移、成功条件、期限超過、通知先、手動振込禁止・例外ルールが関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-011",
+      "gap_ids": [
+        "GAP-007"
+      ],
+      "title": "振込チャネルと結果・照合ルールを確定",
+      "deliverables": [
+        "振込入力項目、受付番号・成否記録、再実行・取消・照合・承認ルール、責任分担"
+      ],
+      "deliverable": "振込入力項目、受付番号・成否記録、再実行・取消・照合・承認ルール、責任分担",
+      "owner_candidate": "経理業務責任者と銀行・振込システム担当",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "資金移動結果の完了判定と失敗対応を曖昧にしないため。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "振込入力項目、受付番号・成否記録、再実行・取消・照合・承認ルール、責任分担が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-012",
+      "gap_ids": [
+        "GAP-001",
+        "GAP-002",
+        "GAP-003"
+      ],
+      "title": "申請・承認機能を実装して受入確認",
+      "deliverables": [
+        "入力検証、差し戻し、金額自動分岐、承認履歴の実装物と受入試験記録"
+      ],
+      "deliverable": "入力検証、差し戻し、金額自動分岐、承認履歴の実装物と受入試験記録",
+      "owner_candidate": "Power Apps／自動化実装担当",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "利用者側の差し戻し削減と承認可視化を早期に実現する。",
+      "depends_on": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003",
+        "ACT-004",
+        "ACT-005"
+      ],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [
+        {
+          "predecessor_id": "ACT-001",
+          "type": "required",
+          "gate": "execute",
+          "condition": "経費区分別の入力検証項目と必要なエビデンス要件がレビューされたら検証機能を実装する",
+          "reason": "必須項目と検証基準が不明な状態では受入条件が成立しない",
+          "can_proceed": "入力画面やUI案は先行して作れる",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "to-be-process.yaml: 申請時検証とIMP-001",
+          "status": "proposed",
+          "deferral_agreed": false
+        },
+        {
+          "predecessor_id": "ACT-002",
+          "type": "required",
+          "gate": "execute",
+          "condition": "差し戻し理由コードと再申請ルールの決定記録を使ってワークフローを構成する",
+          "reason": "理由コードと再確認範囲が未決定だと履歴と遷移を確定できない",
+          "can_proceed": "申請者向け画面構成案は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "to-be-process.yaml: 差し戻し管理とIMP-002",
+          "status": "proposed",
+          "deferral_agreed": false
+        },
+        {
+          "predecessor_id": "ACT-003",
+          "type": "required",
+          "gate": "execute",
+          "condition": "税込・日本円換算後の申請単位総額による5万円判定仕様と境界値テストを取得する",
+          "reason": "金額判定の条件がルーティング動作と受入判定を決める",
+          "can_proceed": "分岐なしのプロトタイプは先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "improvement-decisions.yaml: IMP-003 と金額判定解決事項",
+          "status": "proposed",
+          "deferral_agreed": false
+        },
+        {
+          "predecessor_id": "ACT-004",
+          "type": "required",
+          "gate": "execute",
+          "condition": "承認の取消・代理・再割当・期限超過ルールの決定後に本番相当の承認機能を実装する",
+          "reason": "承認権限や通知条件が未決定では正しい状態遷移を保証できない",
+          "can_proceed": "承認状態一覧の画面案は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "improvement-analysis.yaml: IMP-004 の未確認事項",
+          "status": "proposed",
+          "deferral_agreed": false
+        },
+        {
+          "predecessor_id": "ACT-005",
+          "type": "required",
+          "gate": "execute",
+          "condition": "承認基盤のライセンス・接続権限とPower Apps連携方式の検証後に接続構成を実装する",
+          "reason": "利用可能な接続方式が不明だと実装方法を確定できない",
+          "can_proceed": "業務要求と通知案の整理は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "to-be-process.yaml: 承認状態管理と利用権限の未確認事項",
+          "status": "proposed",
+          "deferral_agreed": false
+        }
+      ],
+      "start_status": "blocked",
+      "entry_conditions": [
+        "先行課題の必要成果が揃うこと。"
+      ],
+      "acceptance_criteria": [
+        "入力検証、差し戻し、金額自動分岐、承認履歴の実装物と受入試験記録が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown",
+      "stage_split_rationale": "ACT-001からACT-005で調査・業務決定・設計を分離済み。本課題は確定済み仕様を対象とする同一実装チームの構築と、その機能を用いた受入記録を一体で管理する。正式受入は先行成果を必須条件とする。"
+    },
+    {
+      "id": "ACT-013",
+      "gap_ids": [
+        "GAP-004",
+        "GAP-005",
+        "GAP-006",
+        "GAP-007"
+      ],
+      "title": "会計連携・保管・振込前統制を結合して受入確認",
+      "deliverables": [
+        "例外系を含む結合試験記録、二重登録防止、両方成功時のみ振込可能である証跡"
+      ],
+      "deliverable": "例外系を含む結合試験記録、二重登録防止、両方成功時のみ振込可能である証跡",
+      "owner_candidate": "会計・自動化実装担当と経理業務責任者",
+      "owner_status": "proposed",
+      "priority": "critical",
+      "priority_reason": "高リスクな後半処理を個別実装ではなく結合条件まで検証する。",
+      "depends_on": [
+        "ACT-010",
+        "ACT-011",
+        "ACT-015",
+        "ACT-016"
+      ],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [
+        {
+          "predecessor_id": "ACT-010",
+          "type": "required",
+          "gate": "execute",
+          "condition": "両処理の成功時のみ次工程へ進める状態遷移表と例外責任者の確認を受けて結合テストを実施する",
+          "reason": "片側失敗時の振込禁止条件をテストできなければ統制を確認できない",
+          "can_proceed": "正常系の試験データ設計は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "to-be-process.yaml: 並行成功条件とIMP-007",
+          "status": "proposed",
+          "deferral_agreed": false
+        },
+        {
+          "predecessor_id": "ACT-011",
+          "type": "required",
+          "gate": "execute",
+          "condition": "振込チャネル・受付番号・結果照合・取消ルールの決定後に結合受入の条件を確定する",
+          "reason": "振込結果の検証には結果コードと責任分担のルールが必要",
+          "can_proceed": "振込前までの結合試験は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "source": "improvement-analysis.yaml: IMP-008 振込結果改善",
+          "status": "proposed",
+          "deferral_agreed": false
+        },
+        {
+          "predecessor_id": "ACT-015",
+          "type": "required",
+          "gate": "execute",
+          "condition": "会計登録の正常・失敗・重複防止を確認済みの連携機能を結合受入へ提供する",
+          "reason": "結合試験の会計処理について実装された処理が必要",
+          "source": "to-be-process.yaml: 会計登録の結果判定とIMP-005",
+          "can_proceed": "受入シナリオの作成は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "status": "proposed"
+        },
+        {
+          "predecessor_id": "ACT-016",
+          "type": "required",
+          "gate": "execute",
+          "condition": "保存成功・失敗・申請IDとの紐付けを確認できる保管機能を結合受入へ提供する",
+          "reason": "振込前統制の評価には実際の保管結果が必要",
+          "source": "to-be-process.yaml: 保管結果確認とIMP-006",
+          "can_proceed": "監査・保管要件の試験表は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "status": "proposed"
+        }
+      ],
+      "start_status": "blocked",
+      "entry_conditions": [
+        "先行課題の必要成果が揃うこと。"
+      ],
+      "acceptance_criteria": [
+        "例外系を含む結合試験記録、二重登録防止、両方成功時のみ振込可能である証跡が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown",
+      "stage_split_rationale": "ACT-006からACT-011で外部仕様調査と個別設計を分離済み。本課題は会計連携・保管・振込前条件を結合した状態でのみ検証できる統制受入を対象とする。"
+    },
+    {
+      "id": "ACT-014",
+      "gap_ids": [
+        "GAP-008"
+      ],
+      "title": "KPIベースラインと測定定義を整備",
+      "deliverables": [
+        "申請件数・所要時間・差し戻し率・会計登録エラー率の現状値と測定方法"
+      ],
+      "deliverable": "件数・工数・率の基準値、測定定義、プロセスオーナー、教育・監視・切戻し計画",
+      "owner_candidate": "経理業務責任者（取りまとめ候補）",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "現状値がないと改善効果を評価できないため、詳細実装とは独立して早期に計測方法を定める。",
+      "depends_on": [],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [],
+      "start_status": "ready",
+      "entry_conditions": [
+        "関係資料へアクセスでき、候補役割へ確認を開始できること。"
+      ],
+      "acceptance_criteria": [
+        "件数・工数・率の基準値、測定定義、プロセスオーナー、教育・監視・切戻し計画が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown"
+    },
+    {
+      "id": "ACT-015",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "title": "会計連携の登録・エラー対応機能を実装",
+      "deliverables": [
+        "会計登録連携機能、重複送信防止と再実行ログ、結合試験用の登録結果"
+      ],
+      "deliverable": "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計",
+      "owner_candidate": "実装・運用担当候補（権限・人数未確定）",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "手入力削減を実現するには設計だけでなく会計登録、重複防止、例外通知を動作させる必要がある。",
+      "depends_on": [
+        "ACT-007"
+      ],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [
+        {
+          "predecessor_id": "ACT-007",
+          "type": "required",
+          "gate": "execute",
+          "condition": "会計項目対応表・重複防止キー・訂正フロー設計のレビュー後に連携を実装する",
+          "reason": "会計登録重複や訂正不可が起きないよう設計値が必要",
+          "source": "improvement-analysis.yaml: IMP-005 会計連携改善",
+          "can_proceed": "テスト用スタブと送信項目の候補は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "status": "proposed"
+        }
+      ],
+      "start_status": "blocked",
+      "entry_conditions": [
+        "先行課題の必要成果が揃うこと。"
+      ],
+      "acceptance_criteria": [
+        "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown",
+      "question_ids": []
+    },
+    {
+      "id": "ACT-016",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "title": "エビデンス自動保管と失敗時の是正を実装",
+      "deliverables": [
+        "申請IDに紐付く保存フロー、保存結果・エラー処理、アクセス権テスト記録"
+      ],
+      "deliverable": "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計",
+      "owner_candidate": "実装・運用担当候補（権限・人数未確定）",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "手作業保管を削減し監査追跡を成立させるには申請IDと保存結果を関連付ける処理が必要である。",
+      "depends_on": [
+        "ACT-009"
+      ],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [
+        {
+          "predecessor_id": "ACT-009",
+          "type": "required",
+          "gate": "execute",
+          "condition": "保存フロー設計、申請ID連携、再実行仕様の確認後にエビデンス保管を構築する",
+          "reason": "保持・紐付け・失敗時再実行の要件を満たす必要がある",
+          "source": "improvement-analysis.yaml: IMP-006 自動保管改善",
+          "can_proceed": "サンプルファイルを用いた保存手段の試行は先行可能",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "status": "proposed"
+        }
+      ],
+      "start_status": "blocked",
+      "entry_conditions": [
+        "先行課題の必要成果が揃うこと。"
+      ],
+      "acceptance_criteria": [
+        "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown",
+      "question_ids": []
+    },
+    {
+      "id": "ACT-017",
+      "gap_ids": [
+        "GAP-008"
+      ],
+      "title": "教育・監視・切戻しを含む導入準備を整備",
+      "deliverables": [
+        "運用監視表、担当・教育計画、切戻し条件と移行チェックリスト"
+      ],
+      "deliverable": "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計",
+      "owner_candidate": "実装・運用担当候補（権限・人数未確定）",
+      "owner_status": "proposed",
+      "priority": "high",
+      "priority_reason": "受入結果を踏まえた教育・監視・切戻し計画がなければ安全に移行判断できない。",
+      "depends_on": [
+        "ACT-013"
+      ],
+      "dependency_reason": "段階別の依存はdependency_relationsに記載。",
+      "dependency_relations": [
+        {
+          "predecessor_id": "ACT-013",
+          "type": "required",
+          "gate": "finalize",
+          "condition": "正常系・境界値・片側失敗の受入結果と残件を確認して移行計画を確定する",
+          "reason": "教育・監視・切戻しの正式確定には受入結果が必要",
+          "source": "to-be-process.yaml: 並行振込前統制と運用移行判断",
+          "can_proceed": "訓練計画案・周知案は並行して準備できる",
+          "if_deferred": "該当段階の正式確定・実施を保留するが、資料整理・試作は先行可能",
+          "status": "proposed"
+        }
+      ],
+      "start_status": "blocked",
+      "entry_conditions": [
+        "先行課題の必要成果が揃うこと。"
+      ],
+      "acceptance_criteria": [
+        "申請項目・会計項目マッピング表、勘定科目ルール、重複防止キー、再実行設計が関係者レビュー可能な状態で記録されていること。"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements",
+          "note": "採用改善から導出した実施課題",
+          "evidence_kind": "documented"
+        },
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.bpr.change_log",
+          "note": "To-Be反映内容",
+          "evidence_kind": "documented"
+        }
+      ],
+      "duration_business_days": null,
+      "estimate_source": null,
+      "estimate_status": "unknown",
+      "question_ids": []
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q-001",
+      "question": "各作業の標準所要時間",
+      "gap_ids": [
+        "GAP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-002",
+      "question": "月間申請件数と繁閑差",
+      "gap_ids": [
+        "GAP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-003",
+      "question": "プロセスオーナー",
+      "gap_ids": [
+        "GAP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[2]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-004",
+      "question": "SLA",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[3]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-005",
+      "question": "現行の差し戻し理由別件数と差し戻し率はどの程度か",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-006",
+      "question": "Power Appsアプリで実装可能な入力検証方式と改修権限は何か",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-007",
+      "question": "再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[2]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-008",
+      "question": "部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[3]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-009",
+      "question": "閾値変更の承認者と変更履歴の保管要件は何か",
+      "gap_ids": [
+        "GAP-002"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[4]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-010",
+      "question": "SLAと期限超過時の通知・エスカレーション経路は何か",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[5]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-011",
+      "question": "代理承認、承認取消、再割当の許容ルールは何か",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[6]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-012",
+      "question": "Power Automate承認機能に必要なライセンスと環境権限を満たすか",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[7]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-013",
+      "question": "会計システムが提供するAPIまたは入出力ファイル仕様は何か",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[8]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-014",
+      "question": "連携失敗時の再実行上限と経理担当者への通知方法は何か",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[9]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-015",
+      "question": "自動登録後の取消・訂正処理はどの経路で行うか",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[10]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-016",
+      "question": "所定の保管先と法令・監査上の保持要件は何か",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[11]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-017",
+      "question": "元ファイル、変換後ファイル、版のどれを保持対象とするか",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[12]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-018",
+      "question": "保存失敗時の再実行と手動是正の責任者は誰か",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[13]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-019",
+      "question": "並行処理の期限超過判定に用いるSLAは何か",
+      "gap_ids": [
+        "GAP-003",
+        "GAP-006"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[14]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-020",
+      "question": "会計登録失敗と保管失敗の例外責任者は同一か",
+      "gap_ids": [
+        "GAP-006"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[15]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-021",
+      "question": "片側が長期停止した場合の申請取消または手動振込の許可ルールは何か",
+      "gap_ids": [
+        "GAP-006"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[16]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-022",
+      "question": "振込処理で利用するシステムまたは銀行チャネルは何か",
+      "gap_ids": [
+        "GAP-007"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[17]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-023",
+      "question": "振込失敗時の再実行、取消、照合、承認ルールは何か",
+      "gap_ids": [
+        "GAP-007"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[18]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-024",
+      "question": "振込結果と会計登録結果の照合責任者は誰か",
+      "gap_ids": [
+        "GAP-007"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[19]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-025",
+      "question": "改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。",
+      "gap_ids": [
+        "GAP-001",
+        "GAP-004",
+        "GAP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[20]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-026",
+      "question": "規程、監査、保持、権限分離の要件が未確認である。",
+      "gap_ids": [
+        "GAP-005",
+        "GAP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "to-be-process.yaml",
+          "entity_id": null,
+          "field": "metadata.open_questions[21]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-027",
+      "question": "現行の差し戻し理由別件数と差し戻し率はどの程度か",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[0].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-028",
+      "question": "Power Appsアプリで実装可能な入力検証方式と改修権限は何か",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[0].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-029",
+      "question": "再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[1].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-030",
+      "question": "部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか",
+      "gap_ids": [
+        "GAP-001"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[1].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-031",
+      "question": "閾値変更の承認者と変更履歴の保管要件は何か",
+      "gap_ids": [
+        "GAP-002"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[2].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-032",
+      "question": "税・外貨換算・複数明細の場合に判定対象とする金額は何か",
+      "gap_ids": [
+        "GAP-002"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[2].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "resolved",
+      "resolution": "5万円以上の判定には、申請単位の精算予定総額（税込・日本円換算後）を使用する。複数明細は合算し、外貨明細は組織で定める換算ルールにより日本円へ換算する。",
+      "resolution_source": "improvement-decisions.yaml business_rule_resolutions[0]"
+    },
+    {
+      "id": "Q-033",
+      "question": "SLAと期限超過時の通知・エスカレーション経路は何か",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[3].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-034",
+      "question": "代理承認、承認取消、再割当の許容ルールは何か",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[3].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-035",
+      "question": "Power Automate承認機能に必要なライセンスと環境権限を満たすか",
+      "gap_ids": [
+        "GAP-003"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[3].unresolved_questions[2]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-036",
+      "question": "会計システムが提供するAPIまたは入出力ファイル仕様は何か",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[4].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-037",
+      "question": "連携失敗時の再実行上限と経理担当者への通知方法は何か",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[4].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-038",
+      "question": "自動登録後の取消・訂正処理はどの経路で行うか",
+      "gap_ids": [
+        "GAP-004"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[4].unresolved_questions[2]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-039",
+      "question": "所定の保管先と法令・監査上の保持要件は何か",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[5].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-040",
+      "question": "元ファイル、変換後ファイル、版のどれを保持対象とするか",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[5].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-041",
+      "question": "保存失敗時の再実行と手動是正の責任者は誰か",
+      "gap_ids": [
+        "GAP-005"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[5].unresolved_questions[2]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-042",
+      "question": "並行処理の期限超過判定に用いるSLAは何か",
+      "gap_ids": [
+        "GAP-003",
+        "GAP-006"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[6].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-043",
+      "question": "会計登録失敗と保管失敗の例外責任者は同一か",
+      "gap_ids": [
+        "GAP-006"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[6].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-044",
+      "question": "片側が長期停止した場合の申請取消または手動振込の許可ルールは何か",
+      "gap_ids": [
+        "GAP-006"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[6].unresolved_questions[2]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-045",
+      "question": "振込処理で利用するシステムまたは銀行チャネルは何か",
+      "gap_ids": [
+        "GAP-007"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[7].unresolved_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-046",
+      "question": "振込失敗時の再実行、取消、照合、承認ルールは何か",
+      "gap_ids": [
+        "GAP-007"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[7].unresolved_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-047",
+      "question": "振込結果と会計登録結果の照合責任者は誰か",
+      "gap_ids": [
+        "GAP-007"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "improvements[7].unresolved_questions[2]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-048",
+      "question": "改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。",
+      "gap_ids": [
+        "GAP-001",
+        "GAP-004",
+        "GAP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions[0]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    },
+    {
+      "id": "Q-049",
+      "question": "規程、監査、保持、権限分離の要件が未確認である。",
+      "gap_ids": [
+        "GAP-005",
+        "GAP-008"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions[1]",
+          "note": "原文の未確認事項",
+          "evidence_kind": "documented"
+        }
+      ],
+      "respondent_candidate": "経理業務責任者を取りまとめ候補とし、論点に応じてPower Apps担当、会計システム担当、情報管理・監査担当へ確認",
+      "impact": "未解消の場合、関連する設計確定、実装、受入または効果測定に制約が残る。",
+      "status": "open",
+      "resolution": null,
+      "resolution_source": null
+    }
+  ],
+  "coverage": {
+    "source_question_lineage": [
+      {
+        "file": "process.yaml",
+        "field_path": "metadata.open_questions[0]",
+        "original_text": "各作業の標準所要時間",
+        "question_id": "Q-001",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "process.yaml",
+        "field_path": "metadata.open_questions[1]",
+        "original_text": "月間申請件数と繁閑差",
+        "question_id": "Q-002",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "process.yaml",
+        "field_path": "metadata.open_questions[2]",
+        "original_text": "プロセスオーナー",
+        "question_id": "Q-003",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "process.yaml",
+        "field_path": "metadata.open_questions[3]",
+        "original_text": "SLA",
+        "question_id": "Q-004",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[0]",
+        "original_text": "現行の差し戻し理由別件数と差し戻し率はどの程度か",
+        "question_id": "Q-005",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[1]",
+        "original_text": "Power Appsアプリで実装可能な入力検証方式と改修権限は何か",
+        "question_id": "Q-006",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[2]",
+        "original_text": "再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か",
+        "question_id": "Q-007",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[3]",
+        "original_text": "部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか",
+        "question_id": "Q-008",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[4]",
+        "original_text": "閾値変更の承認者と変更履歴の保管要件は何か",
+        "question_id": "Q-009",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[5]",
+        "original_text": "SLAと期限超過時の通知・エスカレーション経路は何か",
+        "question_id": "Q-010",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[6]",
+        "original_text": "代理承認、承認取消、再割当の許容ルールは何か",
+        "question_id": "Q-011",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[7]",
+        "original_text": "Power Automate承認機能に必要なライセンスと環境権限を満たすか",
+        "question_id": "Q-012",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[8]",
+        "original_text": "会計システムが提供するAPIまたは入出力ファイル仕様は何か",
+        "question_id": "Q-013",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[9]",
+        "original_text": "連携失敗時の再実行上限と経理担当者への通知方法は何か",
+        "question_id": "Q-014",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[10]",
+        "original_text": "自動登録後の取消・訂正処理はどの経路で行うか",
+        "question_id": "Q-015",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[11]",
+        "original_text": "所定の保管先と法令・監査上の保持要件は何か",
+        "question_id": "Q-016",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[12]",
+        "original_text": "元ファイル、変換後ファイル、版のどれを保持対象とするか",
+        "question_id": "Q-017",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[13]",
+        "original_text": "保存失敗時の再実行と手動是正の責任者は誰か",
+        "question_id": "Q-018",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[14]",
+        "original_text": "並行処理の期限超過判定に用いるSLAは何か",
+        "question_id": "Q-019",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[15]",
+        "original_text": "会計登録失敗と保管失敗の例外責任者は同一か",
+        "question_id": "Q-020",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[16]",
+        "original_text": "片側が長期停止した場合の申請取消または手動振込の許可ルールは何か",
+        "question_id": "Q-021",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[17]",
+        "original_text": "振込処理で利用するシステムまたは銀行チャネルは何か",
+        "question_id": "Q-022",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[18]",
+        "original_text": "振込失敗時の再実行、取消、照合、承認ルールは何か",
+        "question_id": "Q-023",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[19]",
+        "original_text": "振込結果と会計登録結果の照合責任者は誰か",
+        "question_id": "Q-024",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[20]",
+        "original_text": "改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。",
+        "question_id": "Q-025",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "to-be-process.yaml",
+        "field_path": "metadata.open_questions[21]",
+        "original_text": "規程、監査、保持、権限分離の要件が未確認である。",
+        "question_id": "Q-026",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[0].unresolved_questions[0]",
+        "original_text": "現行の差し戻し理由別件数と差し戻し率はどの程度か",
+        "question_id": "Q-027",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[0].unresolved_questions[1]",
+        "original_text": "Power Appsアプリで実装可能な入力検証方式と改修権限は何か",
+        "question_id": "Q-028",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[1].unresolved_questions[0]",
+        "original_text": "再申請後も不備または却下理由が解消しない場合の最大再申請回数とエスカレーション先は何か",
+        "question_id": "Q-029",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[1].unresolved_questions[1]",
+        "original_text": "部門長の却下は修正再申請を許す差し戻しのみか、申請終了となる却下も含むか",
+        "question_id": "Q-030",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[2].unresolved_questions[0]",
+        "original_text": "閾値変更の承認者と変更履歴の保管要件は何か",
+        "question_id": "Q-031",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[2].unresolved_questions[1]",
+        "original_text": "税・外貨換算・複数明細の場合に判定対象とする金額は何か",
+        "question_id": "Q-032",
+        "status": "resolved",
+        "resolution_source": "improvement-decisions.yaml business_rule_resolutions[0]"
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[3].unresolved_questions[0]",
+        "original_text": "SLAと期限超過時の通知・エスカレーション経路は何か",
+        "question_id": "Q-033",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[3].unresolved_questions[1]",
+        "original_text": "代理承認、承認取消、再割当の許容ルールは何か",
+        "question_id": "Q-034",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[3].unresolved_questions[2]",
+        "original_text": "Power Automate承認機能に必要なライセンスと環境権限を満たすか",
+        "question_id": "Q-035",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[4].unresolved_questions[0]",
+        "original_text": "会計システムが提供するAPIまたは入出力ファイル仕様は何か",
+        "question_id": "Q-036",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[4].unresolved_questions[1]",
+        "original_text": "連携失敗時の再実行上限と経理担当者への通知方法は何か",
+        "question_id": "Q-037",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[4].unresolved_questions[2]",
+        "original_text": "自動登録後の取消・訂正処理はどの経路で行うか",
+        "question_id": "Q-038",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[5].unresolved_questions[0]",
+        "original_text": "所定の保管先と法令・監査上の保持要件は何か",
+        "question_id": "Q-039",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[5].unresolved_questions[1]",
+        "original_text": "元ファイル、変換後ファイル、版のどれを保持対象とするか",
+        "question_id": "Q-040",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[5].unresolved_questions[2]",
+        "original_text": "保存失敗時の再実行と手動是正の責任者は誰か",
+        "question_id": "Q-041",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[6].unresolved_questions[0]",
+        "original_text": "並行処理の期限超過判定に用いるSLAは何か",
+        "question_id": "Q-042",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[6].unresolved_questions[1]",
+        "original_text": "会計登録失敗と保管失敗の例外責任者は同一か",
+        "question_id": "Q-043",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[6].unresolved_questions[2]",
+        "original_text": "片側が長期停止した場合の申請取消または手動振込の許可ルールは何か",
+        "question_id": "Q-044",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[7].unresolved_questions[0]",
+        "original_text": "振込処理で利用するシステムまたは銀行チャネルは何か",
+        "question_id": "Q-045",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[7].unresolved_questions[1]",
+        "original_text": "振込失敗時の再実行、取消、照合、承認ルールは何か",
+        "question_id": "Q-046",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "improvements[7].unresolved_questions[2]",
+        "original_text": "振込結果と会計登録結果の照合責任者は誰か",
+        "question_id": "Q-047",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "analysis_open_questions[0]",
+        "original_text": "改善効果のベースライン算定に必要な件数、工数、差し戻し率、登録エラー率が未確認である。",
+        "question_id": "Q-048",
+        "status": "open",
+        "resolution_source": null
+      },
+      {
+        "file": "improvement-analysis.yaml",
+        "field_path": "analysis_open_questions[1]",
+        "original_text": "規程、監査、保持、権限分離の要件が未確認である。",
+        "question_id": "Q-049",
+        "status": "open",
+        "resolution_source": null
+      }
+    ],
+    "improvement_lineage": [
+      {
+        "improvement_id": "IMP-001",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-001"
+        ],
+        "action_ids": [
+          "ACT-001",
+          "ACT-002",
+          "ACT-012"
+        ],
+        "no_gap_reason": null
+      },
+      {
+        "improvement_id": "IMP-002",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-001"
+        ],
+        "action_ids": [
+          "ACT-001",
+          "ACT-002",
+          "ACT-012"
+        ],
+        "no_gap_reason": null
+      },
+      {
+        "improvement_id": "IMP-003",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-002"
+        ],
+        "action_ids": [
+          "ACT-003",
+          "ACT-012"
+        ],
+        "no_gap_reason": null
+      },
+      {
+        "improvement_id": "IMP-004",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-003"
+        ],
+        "action_ids": [
+          "ACT-004",
+          "ACT-005",
+          "ACT-012"
+        ],
+        "no_gap_reason": null
+      },
+      {
+        "improvement_id": "IMP-005",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-004"
+        ],
+        "action_ids": [
+          "ACT-006",
+          "ACT-007",
+          "ACT-013",
+          "ACT-015"
+        ],
+        "no_gap_reason": null
+      },
+      {
+        "improvement_id": "IMP-006",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-005"
+        ],
+        "action_ids": [
+          "ACT-008",
+          "ACT-009",
+          "ACT-013",
+          "ACT-016"
+        ],
+        "no_gap_reason": null
+      },
+      {
+        "improvement_id": "IMP-007",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-006"
+        ],
+        "action_ids": [
+          "ACT-010",
+          "ACT-013"
+        ],
+        "no_gap_reason": null
+      },
+      {
+        "improvement_id": "IMP-008",
+        "status": "mapped",
+        "gap_ids": [
+          "GAP-007"
+        ],
+        "action_ids": [
+          "ACT-011",
+          "ACT-013"
+        ],
+        "no_gap_reason": null
+      }
+    ],
+    "mapping_status": "complete"
+  },
+  "scope_summary": {
+    "included": "As-Isから採用済みTo-Beへ移るための設計差分、実施課題、依存、受入条件、次の確認行動。",
+    "excluded": "BPR採否の変更、製品の最終選定、実装・本番移行の完了宣言。",
+    "later": "実見積、詳細日程、実装、業務受入、本番移行は各条件確定後。",
+    "external": "会計システム・銀行チャネルの外部仕様、Power Platformの権限・ライセンス、保管・監査要件の確認。",
+    "temporary": "取りまとめ役は経理業務責任者を候補とし、実担当は未確定。"
+  },
+  "analysis_dimensions": {
+    "process": {
+      "status": "一部確認・未決事項あり",
+      "summary": "申請、承認、並行処理、振込失敗経路の変更を確認。",
+      "gap_ids": [
+        "GAP-001",
+        "GAP-003",
+        "GAP-006",
+        "GAP-007"
+      ],
+      "question_ids": [
+        "Q-004",
+        "Q-005",
+        "Q-006",
+        "Q-007",
+        "Q-008",
+        "Q-010",
+        "Q-011",
+        "Q-012",
+        "Q-019",
+        "Q-020",
+        "Q-021",
+        "Q-022",
+        "Q-023",
+        "Q-024",
+        "Q-025",
+        "Q-027",
+        "Q-028",
+        "Q-029",
+        "Q-030",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-042",
+        "Q-043",
+        "Q-044",
+        "Q-045",
+        "Q-046",
+        "Q-047",
+        "Q-048"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    "technology": {
+      "status": "一部確認・未決事項あり",
+      "summary": "Power Apps、承認基盤、会計連携、保管自動化の実現性に未確認あり。",
+      "gap_ids": [
+        "GAP-003",
+        "GAP-004",
+        "GAP-005"
+      ],
+      "question_ids": [
+        "Q-004",
+        "Q-010",
+        "Q-011",
+        "Q-012",
+        "Q-013",
+        "Q-014",
+        "Q-015",
+        "Q-016",
+        "Q-017",
+        "Q-018",
+        "Q-019",
+        "Q-025",
+        "Q-026",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-036",
+        "Q-037",
+        "Q-038",
+        "Q-039",
+        "Q-040",
+        "Q-041",
+        "Q-042",
+        "Q-048",
+        "Q-049"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    "data": {
+      "status": "一部確認・未決事項あり",
+      "summary": "申請ID、項目マッピング、結果・版・重複防止の設計が必要。",
+      "gap_ids": [
+        "GAP-004",
+        "GAP-005",
+        "GAP-007"
+      ],
+      "question_ids": [
+        "Q-013",
+        "Q-014",
+        "Q-015",
+        "Q-016",
+        "Q-017",
+        "Q-018",
+        "Q-022",
+        "Q-023",
+        "Q-024",
+        "Q-025",
+        "Q-026",
+        "Q-036",
+        "Q-037",
+        "Q-038",
+        "Q-039",
+        "Q-040",
+        "Q-041",
+        "Q-045",
+        "Q-046",
+        "Q-047",
+        "Q-048",
+        "Q-049"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    "people": {
+      "status": "一部確認・未決事項あり",
+      "summary": "社員・承認者・経理の操作変更と例外対応教育が必要。",
+      "gap_ids": [
+        "GAP-001",
+        "GAP-003",
+        "GAP-008"
+      ],
+      "question_ids": [
+        "Q-001",
+        "Q-002",
+        "Q-003",
+        "Q-004",
+        "Q-005",
+        "Q-006",
+        "Q-007",
+        "Q-008",
+        "Q-010",
+        "Q-011",
+        "Q-012",
+        "Q-019",
+        "Q-025",
+        "Q-026",
+        "Q-027",
+        "Q-028",
+        "Q-029",
+        "Q-030",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-042",
+        "Q-048",
+        "Q-049"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    "organization": {
+      "status": "一部確認・未決事項あり",
+      "summary": "プロセスオーナーと例外責任者は未確定。",
+      "gap_ids": [
+        "GAP-006",
+        "GAP-008"
+      ],
+      "question_ids": [
+        "Q-001",
+        "Q-002",
+        "Q-003",
+        "Q-019",
+        "Q-020",
+        "Q-021",
+        "Q-025",
+        "Q-026",
+        "Q-042",
+        "Q-043",
+        "Q-044",
+        "Q-048",
+        "Q-049"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    "rules": {
+      "status": "一部確認・未決事項あり",
+      "summary": "金額ルールは一部解決済み。再申請、SLA、代理、取消は未決定。",
+      "gap_ids": [
+        "GAP-001",
+        "GAP-002",
+        "GAP-003",
+        "GAP-007"
+      ],
+      "question_ids": [
+        "Q-004",
+        "Q-005",
+        "Q-006",
+        "Q-007",
+        "Q-008",
+        "Q-009",
+        "Q-010",
+        "Q-011",
+        "Q-012",
+        "Q-019",
+        "Q-022",
+        "Q-023",
+        "Q-024",
+        "Q-025",
+        "Q-027",
+        "Q-028",
+        "Q-029",
+        "Q-030",
+        "Q-031",
+        "Q-032",
+        "Q-033",
+        "Q-034",
+        "Q-035",
+        "Q-042",
+        "Q-045",
+        "Q-046",
+        "Q-047",
+        "Q-048"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    "control": {
+      "status": "一部確認・未決事項あり",
+      "summary": "両処理成功後のみ振込む統制と監査履歴を強化。",
+      "gap_ids": [
+        "GAP-002",
+        "GAP-006",
+        "GAP-007"
+      ],
+      "question_ids": [
+        "Q-009",
+        "Q-019",
+        "Q-020",
+        "Q-021",
+        "Q-022",
+        "Q-023",
+        "Q-024",
+        "Q-031",
+        "Q-032",
+        "Q-042",
+        "Q-043",
+        "Q-044",
+        "Q-045",
+        "Q-046",
+        "Q-047"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    },
+    "measurement": {
+      "status": "一部確認・未決事項あり",
+      "summary": "件数、工数、率の基準値と測定責任が未確認。",
+      "gap_ids": [
+        "GAP-008"
+      ],
+      "question_ids": [
+        "Q-001",
+        "Q-002",
+        "Q-003",
+        "Q-025",
+        "Q-026",
+        "Q-048",
+        "Q-049"
+      ],
+      "source_refs": [
+        {
+          "file": "improvement-analysis.yaml",
+          "entity_id": null,
+          "field": "analysis_open_questions/process_pattern_coverage",
+          "note": "観点別根拠",
+          "evidence_kind": "documented"
+        }
+      ]
+    }
+  },
+  "next_actions": [
+    {
+      "id": "NA-001",
+      "title": "経理業務・システム・監査の合同確認を開始",
+      "kind": "確認",
+      "priority": "critical",
+      "reason": "手入力削減、統制、差し戻し削減を均衡させ、共通ルールと外部実現性を並行確認する。",
+      "first_step": "経理業務責任者を取りまとめ候補として、Power Apps／自動化、会計システム、情報管理・監査の各役割へ確認会を設定する。",
+      "consult_with": "経理業務責任者、Power Apps／自動化担当、会計システム担当、情報管理・監査担当",
+      "owner_status": "proposed",
+      "expected_result": "業務ルールの決定担当、会計連携方式、正式保管要件、失敗時の責任分担が確認できる。",
+      "related_action_ids": [
+        "ACT-001",
+        "ACT-004",
+        "ACT-006",
+        "ACT-008"
+      ],
+      "question_ids": [
+        "Q-001",
+        "Q-002",
+        "Q-003",
+        "Q-004"
+      ],
+      "depends_on": [],
+      "dependency_relations": [],
+      "status": "confirmed",
+      "source": "架空の全体了承を受けた公開サンプル用Next Action。元の回答を全体承認へ拡張していない。"
+    }
+  ],
+  "planning_decisions": [
+    {
+      "topic": "重視する成果",
+      "decision": "経理の手入力削減、振込前統制・監査強化、社員の差し戻し削減をバランスして進める。",
+      "status": "confirmed",
+      "source": "利用者回答「D」"
+    },
+    {
+      "topic": "最初の一歩と取りまとめ候補",
+      "decision": "経理業務責任者を取りまとめ候補として関係役割の合同確認を開始する。",
+      "status": "confirmed",
+      "source": "利用者回答「OK」"
+    },
+    {
+      "topic": "日程",
+      "decision": "作業別見積・担当の空き・会社休日が未確認のため、日程は確定しない。",
+      "status": "proposed",
+      "source": "原本の標準所要時間未確認および対話で日程条件未提示"
+    }
+  ],
+  "execution_sequence": [
+    {
+      "order": 1,
+      "name": "業務ルール・外部仕様・現状KPIの調査",
+      "action_ids": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-004",
+        "ACT-005",
+        "ACT-006",
+        "ACT-008",
+        "ACT-010",
+        "ACT-011",
+        "ACT-014"
+      ],
+      "status": "proposed",
+      "reason": "規程の決定と外部仕様確認は可能な範囲で並行して行える"
+    },
+    {
+      "order": 2,
+      "name": "確認結果に基づく設計の確定",
+      "action_ids": [
+        "ACT-003",
+        "ACT-007",
+        "ACT-009"
+      ],
+      "status": "proposed",
+      "reason": "前段で得た入力・会計・保管の要件をそれぞれ設計に反映する"
+    },
+    {
+      "order": 3,
+      "name": "対象機能の実装と単体・部分受入",
+      "action_ids": [
+        "ACT-012",
+        "ACT-015",
+        "ACT-016"
+      ],
+      "status": "proposed",
+      "reason": "独立した申請・承認、会計連携、保管機能は設計条件に従い並行可能"
+    },
+    {
+      "order": 4,
+      "name": "結合受入と移行準備",
+      "action_ids": [
+        "ACT-013",
+        "ACT-017"
+      ],
+      "status": "proposed",
+      "reason": "結合受入結果を移行準備の正式確定に反映する"
+    }
+  ],
+  "roadmap": [
+    {
+      "phase": "第1段階：業務ルール・仕様調査と現状測定",
+      "action_ids": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-004",
+        "ACT-005",
+        "ACT-006",
+        "ACT-008",
+        "ACT-010",
+        "ACT-011",
+        "ACT-014"
+      ],
+      "start_condition": "関係部門へ仕様照会ができ、公開サンプルのAs-Is/To-Beを参照できること",
+      "transition_condition": "業務ルールの決定事項と技術仕様の確認結果が設計担当に引き継げること"
+    },
+    {
+      "phase": "第2段階：個別設計",
+      "action_ids": [
+        "ACT-003",
+        "ACT-007",
+        "ACT-009"
+      ],
+      "start_condition": "各設計に必要な現行ルール・外部仕様の一部が確認できること",
+      "transition_condition": "入力検証と会計・保存設計の実装条件・試験観点がレビュー可能であること"
+    },
+    {
+      "phase": "第3段階：機能実装と単体・部分受入",
+      "action_ids": [
+        "ACT-012",
+        "ACT-015",
+        "ACT-016"
+      ],
+      "start_condition": "実装対象ごとの設計条件と接続権限が確認されていること",
+      "transition_condition": "入力・承認、会計登録、保管の各機能で正常・異常結果を記録できること"
+    },
+    {
+      "phase": "第4段階：結合受入と移行準備",
+      "action_ids": [
+        "ACT-013",
+        "ACT-017"
+      ],
+      "start_condition": "会計連携と保管フローの成功・失敗結果が結合試験で参照できること",
+      "transition_condition": "振込前の両方成功条件を含む受入結果を確認し、教育・監視・切戻し条件を整理できること"
+    }
+  ],
+  "dialogue": {
+    "status": "completed",
+    "agreed_scope": "【公開サンプルの架空シナリオ】手入力削減・統制・差し戻し削減をバランスして進め、合同確認と個別調査から段階的に着手する。",
+    "summary": "架空のサンプル対話として、業務ルール、技術調査、実装・受入の段階分離を含むGap分析全体に明示的に合意した例。実プロジェクトの承認ではない。",
+    "deferred_topics": [
+      "全未解決業務質問の回答",
+      "実担当者と権限の確定",
+      "作業別見積と詳細日程",
+      "実装・業務受入・本番移行の実施"
+    ],
+    "confirmation_source": "サンプル用架空対話：全体整理の了承（元の「D→OK」は限定的な回答のため転用しない）",
+    "final_confirmation": {
+      "scope": "overall_gap_analysis",
+      "prompt": "このGap分析全体（優先軸、Next Action、実行順、未確定事項の持ち越し）を了承しますか？",
+      "response": "はい、今回のGap分析全体の内容を了承します。（公開サンプル用の架空回答）"
+    }
+  },
+  "change_log": [
+    {
+      "version": "1.0",
+      "change": "新規Gap分析を作成し、利用者のバランス方針と取りまとめ候補への了承を反映。",
+      "reason": "As-Isと採用済みTo-Beの移行Gapを実施課題と次の行動へ変換。",
+      "impact": "日程は未確定。未決事項はNext Actionへ持ち越し。",
+      "source": "利用者回答「D」「OK」および4原本"
+    },
+    {
+      "description": "公開サンプル向けに全体了承を架空対話として明示し、ACTの実装・移行工程と実施段階別の依存を修正した",
+      "source": "sample-maintenance (not a real user approval)"
+    }
+  ],
+  "verification": {
+    "performed": [
+      "4原本の版・参照・採否照合",
+      "全原質問lineageの保持",
+      "全改善ID、参加者、ノード、フローの原本索引作成"
+    ],
+    "not_performed": [
+      "業務受入試験",
+      "システム疎通試験",
+      "実装状況確認",
+      "本番移行判定",
+      "実際の業務システム環境での結合試験"
+    ],
+    "limitations": [
+      "架空の経費精算業務による公開サンプル。業務上の実装可否・見積・リソース・最終移行承認は未確認。",
+      "本サンプルは過去の正式出力を元に現在の分析契約向けに編集・再レンダリングしたもので、原本パックを用いるfinalワークフローの再実行は行っていない。"
+    ]
+  },
+  "report_view": "full"
+}

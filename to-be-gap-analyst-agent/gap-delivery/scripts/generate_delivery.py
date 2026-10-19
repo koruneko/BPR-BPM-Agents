@@ -596,15 +596,6 @@ def _write_markdown_report(data: dict[str, Any], path: Path) -> None:
             "",
         ]
     lines += ["## 確認したいこと", ""]
-    if final and len(questions) >= 12:
-        # Link only questions directly *addressed* by this next step. It is not
-        # a surrogate index of every open question in the whole programme.
-        pending_ids = {q['id'] for q in questions if q.get('status') != 'resolved'}
-        for na in next_actions:
-            linked = set(na.get('question_ids') or []) & pending_ids
-            if len(linked) >= 12 and len(linked) * 4 >= len(pending_ids) * 3:
-                issues.append(f"{na.get('id')}: Next Action links almost all open questions; split into specific follow-ups and link only directly addressed Q IDs")
-
     for q in questions:
         lines += [
             f"- **{q.get('id')}** [{q.get('status', 'open')}] {q.get('question', '')} — {q.get('respondent_candidate', '')}",

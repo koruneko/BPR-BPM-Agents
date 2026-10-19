@@ -61,6 +61,7 @@ As-Isがない場合の比較は暫定扱いです。また、レポートが完
 | [gap-delivery](./gap-delivery/) | 原本準備、検証、レポートとZIP生成 |
 | [gap-report-format](./gap-report-format/) | レポート形式と表示処理 |
 | [REBUILD_NOTES_v3.md](./REBUILD_NOTES_v3.md) | v3の変更内容とローカル検証の記録 |
+| [sample-outputs](./sample-outputs/) | 架空の経費精算業務によるGap分析サンプル（HTML・JSON・CSV・Markdown・ロードマップ） |
 
 各Skillの詳細はフォルダー内の `SKILL.md` と同梱コードを参照してください。
 

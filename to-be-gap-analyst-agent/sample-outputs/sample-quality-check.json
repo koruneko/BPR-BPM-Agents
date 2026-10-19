@@ -1,0 +1,27 @@
+{
+  "quality_status": "pass",
+  "quality_issues": [],
+  "output_check": {
+    "status": "pass",
+    "issues": []
+  },
+  "source_basis": "published BPM/BPR sample-outputs (4 exact matching SHA-256 hashes)",
+  "final_workflow_rerun": false,
+  "sample_kind": "curated_public_demonstration_not_end_to_end_final",
+  "input_sha256": {
+    "process.yaml": "6d7fd621e139ff45b5d3ce249ac20346b51851668c5316d274ebc6365f91b693",
+    "to-be-process.yaml": "ee0f195f87c6e42869225e19a7f636de14961f003cc87aa9ab4b2c84732fa1f5",
+    "improvement-analysis.yaml": "9ffd06bac3b1ffcdc830713d47337d35655d6d3a34fa479ef0d738bf5f450079",
+    "improvement-decisions.yaml": "bec43b13b963a208f032f3326cad7085100f9376c7561fd4c1e9ca95b1999b59"
+  },
+  "sources_verified_against_public_repo": true,
+  "source_hash_matching_method": "SHA-256 of exact UTF-8 YAML contents in main branch (checked 2026-10-20)",
+  "analysis_manually_adjusted_for_demo": true,
+  "markdown_csv_html_roadmap_generated_with_registered_v3_renderer": true,
+  "formal_verified": false,
+  "notes": [
+    "品質ゲート・派生物のローカル検証と正式生成のE2Eは別である",
+    "公開サンプルは実業務・顧客情報を含まない架空シナリオ",
+    "分析全体への架空の最終了承は元のD→OK回答と区別して記載"
+  ]
+}
